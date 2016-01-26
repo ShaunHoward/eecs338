@@ -28,35 +28,26 @@ int tock(int sleep_time){
 int print_base_process_info(){
     // temporary variables for printing values
     char concat_temp[20];
-    char val[256];
-    int status = 0;
+    char hostname[256];
 
-    //print process id
-    status += fprintf(stdout, "pid: %d\n", getpid());
+    //print process id, parent process id, hostname, username, time of day, cwd, that it is the parent process.
+    fflush(stdout);
+    if(gethostname(hostname, sizeof(hostname)) != 0){
+       perror("gethostname");
+    }
 
-    //print parent process id
-    status += fprintf(stdout, "parent pid: %d\n", getppid());
+    char *login_name = getlogin();
 
-    //print hostname
-    gethostname(val, 256);
-    status += fprintf(stdout, "hostname: %s\n", val);
+    if (login_name == NULL){
+        perror("cuserid");
+    }
 
-    //print username
-    status += fprintf(stdout, "username: %s\n", cuserid(NULL));
-
-    //print time of day
-    time_t curtime;
-    time(&curtime);
-
-    status += fprintf(stdout, "current time: %s\n", ctime(&curtime));
-
-    //print working dir
-    status += fprintf(stdout, "current working directory: %s\n", getcwd(NULL, 0));
-
-    //print that it is the parent process
-    status += fprintf(stdout, "This process is the parent process.\n");
-
-    return 0;
+    time_t curr_time;
+    time(&curr_time);
+    int status = printf("pid: %d\nppid: %d\nhostname: %d\nusername: %d\ntime: %d\ncwd: \n This is the parent process.",
+                     getpid(), getppid(), hostname, login_name, curr_time, getcwd(NULL, 0));
+    perror(status);
+    fflush(stdout);
 }
 
 int print_child_process_info(char *process){
@@ -165,10 +156,21 @@ int run_C2(){
 int run_child_processes(int count){
     int status = 0;
     for(int i = 0; i < count; i++){
-        pid_t fork_name = fork();
-        status += fork_name;
-        status += fprintf(stdout, "Child process spawned with pid: %d\n", fork_name);
+        pid_t pid = fork();
+        status += pid;
+        status += fprintf(stdout, "Child process spawned with pid: %d\n", pid);
         fflush(stdout);
+	if (pid = -1) {
+	    //fork error
+	} else if (pid == 0){
+	   //I am the child, my pid is getpid()
+	   if (i == 0) {
+		   
+		}
+	} else {
+	   sleep(1);
+           //I am the parent, my childs pid is pid	
+	}
         if (status == 0 && i == 0){
             status += run_C1();
         } else if (status == 0 && i == 1){
