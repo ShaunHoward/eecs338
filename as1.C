@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 static char WHALE[] = "WHALE";
-char PO[] = "PO";
+char P0[] = "PO";
 char C1[] = "C1";
 char C2[] = "C2";
 
@@ -58,7 +58,7 @@ int print_child_process_info(char *process){
                     process,
                     getpid(),
                     getppid());
-    fflush(stdout)
+    fflush(stdout);
     return status;
 }
 
@@ -76,7 +76,8 @@ int subtract_from_var(char *env_var, int decr){
     char *var = getenv(env_var);
     int val = atoi(var);
     val -= decr;
-    itoa(val, var, 10);
+    //cheap conversion from int to string
+    var = '0' + val;
     int status = setenv(env_var, var, 1);
     if (status != 0){
         perror("Error setting environment variable WHALE.");
@@ -84,7 +85,7 @@ int subtract_from_var(char *env_var, int decr){
     return status;
 }
 
-int tock_and_subtract(int wait_time, int subtr, char[] process){
+int tock_and_subtract(int wait_time, int subtr, char process[]){
     int status = 0;
     tock(wait_time);
     status += subtract_from_var(WHALE, subtr);
@@ -94,7 +95,7 @@ int tock_and_subtract(int wait_time, int subtr, char[] process){
 
 int run_parent_process(){
     int status = 0;
-    status += tock_and_subtract(3, 1, PO);
+    status += tock_and_subtract(3, 1, P0);
     status += tock_and_subtract(3, 3, P0);
     status += tock_and_subtract(3, 3, P0);
     status += tock_and_subtract(3, 3, P0);
@@ -110,7 +111,7 @@ int run_parent_process(){
     return status;
 }
 
-int await_return(char[] process){
+int await_return(char process[]){
     int return_;
     pid_t proc = wait(&return_);
     int status = return_;
@@ -167,27 +168,33 @@ int run_child_processes(int count){
         pid_t pid = fork();
         status += printf("Child process spawned with pid: %d\n", pid);
         fflush(stdout);
-    	if (pid = -1) {
+    	if (pid == -1) {
     	    //fork error
             perror("Error in forking.")
     	} else if (pid == 0){
     	   //I am the child, my pid is getpid()
+    	   printf("Child process running. Pid is: %d", getpid());
+    	   printf("Parent of current process pid is: %d", getppid());
+    	   fflush(stdout);
     	   if (i == 0) {
         		if (status == 0 && i == 0){
                     status += run_C1();
                 } else if (status == 0 && i == 1){
                     status += run_C2();
                 } else {
-                    status += printf("%s", ERR_MSG);
+                    perror(ERR_MSG);
+					fflush(stderr);
                     return status;
                 }
     		}
     	} else {
     	   sleep(1);
-            //I am the parent, my childs pid is pid	
+            //I am the parent, my childs pid is pid
+    	   printf("Parent process running. Child pid is: ", pid);
+    	   fflush(stdout);
     	}
-
     }
+    return status;
 }
 
 int main(int argc, const char* argv[]){
@@ -201,7 +208,7 @@ int main(int argc, const char* argv[]){
 
     // run 2 child processes for shrimp lines
     success += run_child_processes(2);
-    
+
     // run parent process for shrimp lines
     success += run_parent_process();
 
