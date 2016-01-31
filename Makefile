@@ -1,3 +1,7 @@
 CC=gcc
-make:
-	gcc -o as1 as1.C -I.
+all:
+	gcc as1.C -o as1
+clean:
+	rm as1
+
+
