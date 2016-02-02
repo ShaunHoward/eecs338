@@ -164,7 +164,7 @@ void run_parent_process(){
 		perror("getenv");
 		fflush(stderr);
 	} else {
-		printf("WHALE is at final value %s\n", whale);
+		printf("PO: WHALE is at final value %s\n", whale);
 		fflush(stdout);
 	}
 }
@@ -191,8 +191,9 @@ void run_C1(){
 		perror("chdir");
 		_exit(errno);
 	} else {
-		printf("C1: Changed current directory to root (\\)\n");
-		fflush(stdout);
+		printf("C1: Changed current directory to root (/)\n");
+        fflush(stdout);
+        tock(0.4);
 		execl("/bin/ls", "ls", "-la", (char*)NULL);
 		_exit(errno);
 	}
