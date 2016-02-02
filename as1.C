@@ -193,7 +193,6 @@ void run_C1(){
 	} else {
 		printf("C1: Changed current directory to root (/)\n");
         fflush(stdout);
-        tock(0.4);
 		execl("/bin/ls", "ls", "-la", (char*)NULL);
 		_exit(errno);
 	}
@@ -212,7 +211,7 @@ void run_C2(){
     // sleep and subtract from WHALE twice
     tock_and_subtract(3, 2, C2);
     tock_and_subtract(3, 3, C2);
-	tock(3);
+	tock(4);
 	char cwd[MAXPATHLEN];
 
 	// get and print the cwd if possible
