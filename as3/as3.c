@@ -18,28 +18,34 @@
 //Judy only if the Judy line is the only available (non-full) line. Obviously Tina will be awake if her line is full, so that
 //is another assumption. Thus Tina-only customers wake up Tina when they get there and Judy-only customers wake up Judy
 //when they get there.
+//Tina or Judy will stay awake if either has at least one customer given the counting semaphore nature of their operations. Once no customers
+//request them any longer, they sleep.
 //mod is short for modulo operation.
 
 /*
 //below are shared variables
 //counting semaphores for Tina, Judy
 counting semaphore Tina <- 0 //initially sleeping
-countint semaphore Judy <- 0 //intially sleeping
+counting semaphore Judy <- 0 //initially sleeping
 
-//binary semaphores for the three line types
-binary semaphore TinaCusts <- 0  //initially closed (barber has to wake up to server customers)
-binary semaphore JudyCusts <- 0
-binary semaphore DontCareCusts <- 0
+//counting semaphores for the three line types
+counting semaphore TinaCusts <- 0  //initially closed (barber has to wake up to server customers)
+counting semaphore JudyCusts <- 0
+counting semaphore DontCareCusts <- 0
 
-int N <- 5, integer customer limit per line
+//semaphores for who is currently busy cutting hair
+binary semaphore TinaBusy <- 0 //initially busy to avoid customers getting cuts in impossibly fast time
+binary semaphore JudyBusy <- 0
+binary semaphore DontCareBusy <- 0
+
+//integer customer limit per line
+int N <- 5
+
 // please note that time_stamp is a data type that acts like a float and the larger it is, the more recent
 // the time is (in order to maintain FCFS across the barber shop)
 int TinaSeats[N] <- empty tuple (integer, time_stamp) array of size N
 int JudySeats[N] <- empty tuple (integer, time_stamp) array of size N
 int DontCareSeats[N] <- empty tuple (integer, time_stamp) array of size N
-
-//used for determining a random hair cut time to pick
-int TIME_CAP <- 90 minutes
 
 //track the free seats for the Tina line
 int TinaFreeSeats <- N
@@ -68,19 +74,17 @@ binary semaphore DontCareSeatAccess <- 1
 int DontCareNextServe <- 0
 */
 
+
 /**
  * first solution: Tina as Barber
  * the thread for Tina must be started by the main program before any others
- * assume the Tina tries to sleep before seeing another customer
+ * Tina will try to sleep if she has no customers.
  * Tina {
  *     //track Tina's next customer
  *     int TinaNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
- *     	   //sleep until awoke by customer
- *         wait(Tina)
- *
  *         //protect seat changes in Tina line
  *         wait(TinaSeatAccess)
  *
@@ -119,24 +123,25 @@ int DontCareNextServe <- 0
  *             //unlock seat access
  *             signal(TinaSeatAccess)
  *             signal(DontCareSeatAccess)
+ *
+ *             //sleep until awoke by customer
+ *             wait(Tina)
  *         }
  *     }
  * }
  */
 
+
 /**
  * second solution: Judy as Barber
- * the thread for Judy must be started by the main program after Tina, before customers
- * assume Judy tries to sleep before seeing another customer
+ * the thread for Judy must be started by the main program after Tina.
+ * Judy will try to sleep if she has no customers.
  * Judy {
  *     //track Judy's next customer
  *     int JudyNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
- *     	   //sleep until awoke by customer
- *         wait(Judy)
- *
  *         //protect seat changes in Judy line
  *         wait(JudySeatAccess)
  *
@@ -175,6 +180,9 @@ int DontCareNextServe <- 0
  *             //unlock seat access
  *             signal(JudySeatAccess)
  *             signal(DontCareSeatAccess)
+ *
+ *     	       //sleep until awoke by customer
+ *             wait(Judy)
  *         }
  *     }
  * }
@@ -337,7 +345,7 @@ int DontCareNextServe <- 0
  *      signal(DontCareCusts)
  *
  *      //DontCare cuts the hair of customer C
- *      cut_hair("Dont-Care")
+ *      cut_hair("DontCare")
  * }
  */
 
@@ -379,7 +387,11 @@ int DontCareNextServe <- 0
  *     TinaFreeSeats <- TinaFreeSeats + 1
  *     signal(TinaSeatAccess)
  *
- *     //customer has hair cut by barber
+ *     //customer gets hair cut by Tina
+ *     wait for random time period from 5 to 90 minutes
+ *
+ *     //tell barber to finish cutting
+ *     signal(TinaBusy)
  * }
  */
 
@@ -421,7 +433,11 @@ int DontCareNextServe <- 0
  *     JudyFreeSeats <- JudyFreeSeats + 1
  *     signal(JudySeatAccess)
  *
- *     //customer has hair cut by Judy with barber_pid
+ *     //customer gets hair cut by Judy
+ *     wait for random time period from 5 to 90 minutes
+ *
+ *     //tell barber to finish cutting
+ *     signal(JudyBusy)
  * }
  */
 
@@ -466,6 +482,27 @@ int DontCareNextServe <- 0
  *     signal(DontCareSeatAccess)
  *
  *     //customer gets hair cut by Tina or Judy
+ *     wait for random time period from 5 to 90 minutes
+ *
+ *     //tell barber to finish cutting
+ *     signal(DontCareBusy)
  * }
  */
 
+/**
+ * The cut hair function that will make the given barber who is cutting hair busy
+ * until the customer signals them to stop.
+ * cut_hair(string barber){
+ *     //the designated barber cuts hair
+ *     if (barber == "Tina") {
+ *         //customer gets hair cut by Tina
+ *         wait(TinaBusy)
+ *     } else if (barber == "Judy") {
+ *         //haircut by Judy
+ *         wait(JudyBusy)
+ *     } else if (barber == "DontCare") {
+ *         //hair cut by either barber
+ *         wait(DontCareBusy)
+ *     }
+ * }
+ */
