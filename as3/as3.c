@@ -53,6 +53,9 @@ int TinaFreeSeats <- N
 //index of the next customer seat as a rolling sum that resets using mod N
 int TinaCustNextSeat <- 0
 
+//track Tina's next customer
+int TinaNextServe <- 0
+
 //leave Tina seat access open
 binary semaphore TinaSeatAccess <- 1
 
@@ -61,6 +64,9 @@ int JudyFreeSeats <- N
 
 //index for next Judy cust seat, resets with mod N
 int JudyCustNextSeat <- 0
+
+//track Judy's next customer
+int JudyNextServe <- 0
 
 //initially open Judy seat access
 binary semaphore JudySeatAccess <- 1
@@ -80,8 +86,6 @@ int DontCareNextServe <- 0
  * the thread for Tina must be started by the main program before any others
  * Tina will try to sleep if she has no customers.
  * Tina {
- *     //track Tina's next customer
- *     int TinaNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
@@ -137,8 +141,6 @@ int DontCareNextServe <- 0
  * the thread for Judy must be started by the main program after Tina.
  * Judy will try to sleep if she has no customers.
  * Judy {
- *     //track Judy's next customer
- *     int JudyNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
@@ -268,7 +270,7 @@ int DontCareNextServe <- 0
 
 /**
  * The Tina operation when Tina cuts hair, signals TinaSeatAccess and TinaCusts when done
- * doTina(){
+ * void doTina(){
  *      //get next customer and reset value based on modulo operation (make circular buffer)
  *      TinaNextServe <- TinaNextServe mod N
  *      int next_cust <- TinaNextServe
@@ -296,7 +298,7 @@ int DontCareNextServe <- 0
 
 /**
  * The Judy operation when Judy cuts hair, signals JudySeatAccess and JudyCusts when done
- * doJudy(){
+ * void doJudy(){
  *      //get next customer and reset value based on modulo operation (make circular buffer)
  *      JudyNextServe <- JudyNextServe mod N
  *      int next_cust <- JudyNextServe
@@ -324,7 +326,7 @@ int DontCareNextServe <- 0
 
 /**
  * The Dont-Care barber operation when whoever cuts hair, signals DontCareSeatAccess and DontCareCusts when done
- * doDontCare(){
+ * void doDontCare(){
  *      //get next customer and reset value based on modulo operation (make circular buffer)
  *      DontCareNextServe <- DontCareNextServe mod N
  *      int next_cust <- DontCareNextServe
@@ -354,7 +356,7 @@ int DontCareNextServe <- 0
  * The Tina line routine to execute when there are Tina-only seats open.
  * A customer has Tina seat access, sits down, signals seat access, and then signals Tina,
  * then waiting on
- * doTinaCustomer(){
+ * void doTinaCustomer(){
  *     //take a seat in the Tina line
  *     TinaFreeSeats <- TinaFreeSeats - 1
  *
@@ -398,7 +400,7 @@ int DontCareNextServe <- 0
 
 /**
  * The Judy line routine to execute when there are Judy-only seats open.
- * doJudyCustomer(){
+ * void doJudyCustomer(){
  *     int cust_seat, barber_pid <- 0
  *
  *     //take a seat in the Judy line
@@ -444,7 +446,7 @@ int DontCareNextServe <- 0
 
 /**
  * The don't-care line routine to execute when there are dont-care seats open.
- * doDontCareCustomer(){
+ * void doDontCareCustomer(){
  *     int cust_seat, barber_pid <- 0
  *
  *     //take a seat in don't care line
@@ -492,7 +494,7 @@ int DontCareNextServe <- 0
 /**
  * The cut hair function that will make the given barber who is cutting hair busy
  * until the customer signals them to stop.
- * cut_hair(string barber){
+ * void cut_hair(string barber){
  *     //the designated barber cuts hair
  *     if (barber == "Tina") {
  *         //customer gets hair cut by Tina
