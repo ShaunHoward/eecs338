@@ -12,10 +12,12 @@
 //or Judy's line depending on if either has less than 5 people (checking in that order). Don't Care customers will
 //wake up Tina if their line is not full or if their line is full and the Tina line is not full when they arrive. They will wake up
 //Judy only if the Judy line is the only available (non-full) line. Obviously Tina will be awake if her line is full, so that
-//is another assumption.
+//is another assumption. Thus Tina-only customers wake up Tina when they get there and Judy-only customers wake up Judy
+//when they get there.
 //mod is short for modulo operation.
 
 /*
+//below are shared variables
 //binary semaphores for Tina, Judy and the three different line types
 binary semaphore Tina <- 0 //initially sleeping
 binary semaphore Judy <- 0 //intially sleeping
@@ -24,9 +26,9 @@ binary semaphore TinaCusts <- 1
 binary semaphore JudyCusts <- 1
 
 int N <- 5, integer customer limit per line
-int TinaSeats[N] <- empty integer array of size N
-int JudySeats[N] <- empty integer array of size N
-int DontCareSeats[N] <- empty integer array of size N
+int TinaSeats[N] <- empty tuple (integer, time_stamp) array of size N
+int JudySeats[N] <- empty tuple (integer, time_stamp) array of size N
+int DontCareSeats[N] <- empty tuple (integer, time_stamp) array of size N
 
 //used for determining a random hair cut time to pick
 int TIME_CAP <- 90 minutes
@@ -49,19 +51,22 @@ int JudyCustNextSeat <- 0
 //initially open Judy seat access
 binary semaphore JudySeatAccess <- 1
 
-//dont-care version of above
+//dont-care versions of above
 int DontCareFreeSeats <- N
 int DontCareCustNextSeat <- 0
 binary semaphore DontCareSeatAccess <- 1
+
+//track next dont-care customer in line
+int DontCareNextServe <- 0
 */
 
-//first solution: Tina
-// the thread for Tina must be started by the main program
 /**
- * int TinaNextServe <- 0
- * Mutex TinaSeatAccess <- 1
- * Tina {
+ * first solution: Tina as Barber
+ * the thread for Tina must be started by the main program
  *
+ * Tina {
+ *     //track Tina's next customer
+ *     int TinaNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
@@ -71,9 +76,20 @@ binary semaphore DontCareSeatAccess <- 1
  *         //protect seat changes in Tina line
  *         wait(TinaSeatAccess)
  *
+ *         //protect seat changes in Dont-Care line
+ *         wait(DontCareSeatAccess)
+ *
+ *         //peek at the next Tina customer
+ *         integer next_tina_cust <- TinaNextServe mod N
+ *
+ *         //peek at the next Dont-care customer
+ *         integer next_dontcare_cust < DontCareNextServe mod N
+ *
+ *         if (Tin
+ *
  *         //cut Tina hair or signal ability to modify line
  *         if (TinaFreeSeats < N) {
- *             doTina()
+ *             doTina(next_cust)
  *         } else {
  *             signal(TinaSeatAccess)
  *         }
@@ -91,14 +107,12 @@ binary semaphore DontCareSeatAccess <- 1
  * }
  */
 
-
-//second solution: Judy
-// the thread for Judy must be started by the main program
 /**
- * int JudyNextServe <- 0
- * Mutex JudySeatAccess <- 1
+ * second solution: Judy as Barber
+ * the thread for Judy must be started by the main program
  * Judy {
- *
+ *     //track Judy's next customer
+ *     int JudyNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
@@ -128,9 +142,9 @@ binary semaphore DontCareSeatAccess <- 1
  */
 
 
-//third solution: Tina-only customers
-// threads for Tina's Customers should be started at random times for continuous customer approach
 /**
+ * third solution: Tina-only customers
+ * threads for Tina's Customers should be started at random times for continuous customer approach
  * TinaCustomer {
  *     int cust_seat, barber_pid <- 0
  *
@@ -150,9 +164,9 @@ binary semaphore DontCareSeatAccess <- 1
  */
 
 
-//fourth solution: Judy-only customers
-// threads for Judy's Customers should be started at random times for continuous customer approach
 /**
+ * fourth solution: Judy-only customers
+ * threads for Judy's Customers should be started at random times for continuous customer approach
  * JudyCustomer {
  *     int cust_seat, barber_pid <- 0
  *
@@ -172,15 +186,15 @@ binary semaphore DontCareSeatAccess <- 1
  */
 
 
-//fifth solution: Don't-Care customers
-// threads for Don't-Care Customers should be started at random times for continuous customer approach
 /**
+ * fifth solution: Don't-Care customers
+ * threads for Don't-Care Customers should be started at random times for continuous customer approach
  * DontCareCustomer {
  *     int cust_seat, barber_pid <- 0
  *
  *     //attempt to access don't-care line
  *     wait(DontCareSeatAccess)
- *     if (DontCareSeats > 0) {
+ *     if (DontCareFreeSeats > 0) {
  *         doDontCareCustomer()
  *     } else {
  *         signal(DontCareSeatAccess)
@@ -188,7 +202,7 @@ binary semaphore DontCareSeatAccess <- 1
  *
  *     //attempt to access Tina line
  *     wait(TinaSeatAccess)
- *     if (TinaSeats > 0) {
+ *     if (TinaFreeSeats > 0) {
  *         doTinaCustomer()
  *     }  else {
  *         signal(TinaSeatAccess)
@@ -196,7 +210,7 @@ binary semaphore DontCareSeatAccess <- 1
  *
  *     //attempt to access Judy line
  *     wait(JudySeatAccess)
- *     if (JudySeats > 0) {
+ *     if (JudyFreeSeats > 0) {
  *         doJudyCustomer()
  *     } else {
  *         signal(JudySeatAccess)
@@ -205,9 +219,11 @@ binary semaphore DontCareSeatAccess <- 1
  * }
  */
 
+
 /**
- * doTina(){
- *      //choose the next customer
+ * The Tina operation when Tina cuts hair, signals TinaSeatAccess and TinaCusts when done
+ * doTina(integer next_cust){
+ *      //choose the next customer based on the time stamp stored with them
  *      TinaNextServe <- TinaNextServe mod N //might be wrong for Tina and dont-care custs only
  *      next_cust <- TinaNextServe
  *
@@ -230,8 +246,10 @@ binary semaphore DontCareSeatAccess <- 1
  * }
  */
 
+
 /**
- * doJudy(){
+ * The Judy operation when Judy cuts hair, signals JudySeatAccess and JudyCusts when done
+ * doJudy(integer next_cust){
  *      //choose the next customer
  *      JudyNextServe <- JudyNextServe mod N //might be wrong for Judy and dont-care custs only
  *      next_cust <- JudyNextServe
@@ -257,8 +275,36 @@ binary semaphore DontCareSeatAccess <- 1
 
 
 /**
+ * The Dont-Care barber operation when whoever cuts hair, signals DontCareSeatAccess and DontCareCusts when done
+ * doDontCareBarber(integer next_cust){
+ *      DontCareNextServe <- DontCareNextServe mod N //might be wrong for DontCare and dont-care custs only
+ *      next_cust <- DontCareNextServe
+ *
+ *      //increment DontCare's next customer
+ *		DontCareNextServe++
+ *
+ *      //find the customer pid
+ *      cust_pid <- DontCareSeats[next_cust]
+ *
+ *      //leave customer DontCare's pid
+ *      DontCareSeats[next_cust] <- DontCare's process id
+ *
+ *      //allow seat changes by releasing mutex
+ *      signal(DontCareSeatAccess)
+ *
+ *      //wake up customer
+ *      signal(DontCareCusts)
+ *
+ *      //DontCare cuts the hair of customer C
+ * }
+ */
+
+
+/**
  * The Tina line routine to execute when there are Tina-only seats open.
- * doTinaCustomer(){
+ * A customer has Tina seat access, sits down, signals seat access, and then signals Tina,
+ * then waiting on
+ * doTinaCustomer(integer cust_seat){
  *     //take a seat in the Tina line
  *     TinaFreeSeats <- TinaFreeSeats - 1
  *
@@ -295,9 +341,10 @@ binary semaphore DontCareSeatAccess <- 1
  * }
  */
 
+
 /**
  * The Judy line routine to execute when there are Judy-only seats open.
- * doJudyCustomer(){
+ * doJudyCustomer(integer cust_seat){
  *     //take a seat in the Judy line
  *     JudyFreeSeats <- JudyFreeSeats - 1
  *
@@ -334,9 +381,10 @@ binary semaphore DontCareSeatAccess <- 1
  * }
  */
 
+
 /**
  * The don't-care line routine to execute when there are dont-care seats open.
- * doDontCareCustomer(){
+ * doDontCareCustomer(integer cust_seat){
  *
  *     //take a seat in don't care line
  *     DontCareSeats <- DontCareSeats - 1
@@ -367,7 +415,7 @@ binary semaphore DontCareSeatAccess <- 1
  *     barber_pid <- DontCareSeats[cust_seat]
  *
  *     //increment the free seat count
- *     FreeSeatCount <- FreeSeatCount + 1
+ *     DontCareSeats <- DontCareSeats + 1
  *
  *     //signal an open dont-care seat
  *     signal(DontCareSeatAccess)
