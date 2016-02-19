@@ -33,11 +33,6 @@ counting semaphore TinaCusts <- 0  //initially closed (barber has to wake up to 
 counting semaphore JudyCusts <- 0
 counting semaphore DontCareCusts <- 0
 
-//semaphores for who is currently busy cutting hair
-binary semaphore TinaBusy <- 0 //initially busy to avoid customers getting cuts in impossibly fast time
-binary semaphore JudyBusy <- 0
-binary semaphore DontCareBusy <- 0
-
 //integer customer limit per line
 int N <- 5
 
@@ -89,6 +84,9 @@ int DontCareNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
+ *         //sleep until awoke by customer
+ *         wait(Tina)
+ *
  *         //protect seat changes in Tina line
  *         wait(TinaSeatAccess)
  *
@@ -127,9 +125,6 @@ int DontCareNextServe <- 0
  *             //unlock seat access
  *             signal(TinaSeatAccess)
  *             signal(DontCareSeatAccess)
- *
- *             //sleep until awoke by customer
- *             wait(Tina)
  *         }
  *     }
  * }
@@ -144,6 +139,9 @@ int DontCareNextServe <- 0
  *     int next_cust, cust_pid <- 0
  *
  *     while(true){
+ *     	   //sleep until awoke by customer
+ *         wait(Judy)
+ *
  *         //protect seat changes in Judy line
  *         wait(JudySeatAccess)
  *
@@ -182,9 +180,6 @@ int DontCareNextServe <- 0
  *             //unlock seat access
  *             signal(JudySeatAccess)
  *             signal(DontCareSeatAccess)
- *
- *     	       //sleep until awoke by customer
- *             wait(Judy)
  *         }
  *     }
  * }
@@ -217,8 +212,6 @@ int DontCareNextServe <- 0
  * fourth solution: Judy-only customers
  * threads for Judy's Customers should be started at random times by main program for continuous customer approach
  * JudyCustomer {
- *     int cust_seat, barber_pid <- 0
- *
  *     //protect seat changes with mutex
  *     wait(JudySeatAccess)
  *
@@ -355,7 +348,7 @@ int DontCareNextServe <- 0
 /**
  * The Tina line routine to execute when there are Tina-only seats open.
  * A customer has Tina seat access, sits down, signals seat access, and then signals Tina,
- * then waiting on
+ * then waits in the Tina line until signaled, then they get a haircut from Tina and leave.
  * void doTinaCustomer(){
  *     //take a seat in the Tina line
  *     TinaFreeSeats <- TinaFreeSeats - 1
@@ -389,11 +382,8 @@ int DontCareNextServe <- 0
  *     TinaFreeSeats <- TinaFreeSeats + 1
  *     signal(TinaSeatAccess)
  *
- *     //customer gets hair cut by Tina
- *     wait for random time period from 5 to 90 minutes
- *
- *     //tell barber to finish cutting
- *     signal(TinaBusy)
+ *     //get haircut from Tina
+ *     get_haircut("Tina)
  * }
  */
 
@@ -401,8 +391,6 @@ int DontCareNextServe <- 0
 /**
  * The Judy line routine to execute when there are Judy-only seats open.
  * void doJudyCustomer(){
- *     int cust_seat, barber_pid <- 0
- *
  *     //take a seat in the Judy line
  *     JudyFreeSeats <- JudyFreeSeats - 1
  *
@@ -410,7 +398,7 @@ int DontCareNextServe <- 0
  *     JudyCustNextSeat <- JudyCustNextSeat mod N
  *
  *     //chose the new seat position
- *     cust_seat <- JudyCustNextSeat
+ *     int cust_seat <- JudyCustNextSeat
  *
  *	   //increment the customer seat id
  *	   JudyCustNextSeat++
@@ -429,17 +417,14 @@ int DontCareNextServe <- 0
  *     wait(JudySeatAccess)
  *
  *     //store Judy's pid
- *     barber_pid <- JudySeats[cust_seat]
+ *     int barber_pid <- JudySeats[cust_seat]
  *
  *     //allow seat to be used for more customers
  *     JudyFreeSeats <- JudyFreeSeats + 1
  *     signal(JudySeatAccess)
  *
  *     //customer gets hair cut by Judy
- *     wait for random time period from 5 to 90 minutes
- *
- *     //tell barber to finish cutting
- *     signal(JudyBusy)
+ *     get_haircut("Judy")
  * }
  */
 
@@ -447,8 +432,6 @@ int DontCareNextServe <- 0
 /**
  * The don't-care line routine to execute when there are dont-care seats open.
  * void doDontCareCustomer(){
- *     int cust_seat, barber_pid <- 0
- *
  *     //take a seat in don't care line
  *     DontCareSeats <- DontCareSeats - 1
  *
@@ -456,7 +439,7 @@ int DontCareNextServe <- 0
  *     DontCareCustNextSeat <- DontCareCustNextSeat mod N
  *
  *     //store the seat index
- *     cust_seat <- DontCareCustNextSeat
+ *     int cust_seat <- DontCareCustNextSeat
  *
  *     //increment the next seat position
  *     DontCareCustNextSeat++
@@ -475,7 +458,7 @@ int DontCareNextServe <- 0
  *     wait(DontCareSeatAccess)
  *
  *     //retrieve the barber's pid
- *     barber_pid <- DontCareSeats[cust_seat]
+ *     int barber_pid <- DontCareSeats[cust_seat]
  *
  *     //increment the free seat count
  *     DontCareSeats <- DontCareSeats + 1
@@ -483,28 +466,27 @@ int DontCareNextServe <- 0
  *     //signal an open dont-care seat
  *     signal(DontCareSeatAccess)
  *
- *     //customer gets hair cut by Tina or Judy
- *     wait for random time period from 5 to 90 minutes
- *
- *     //tell barber to finish cutting
- *     signal(DontCareBusy)
+ *     //get haircut from either Tina or Judy
+ *     get_haircut("DontCare")
  * }
  */
 
 /**
- * The cut hair function that will make the given barber who is cutting hair busy
- * until the customer signals them to stop.
- * void cut_hair(string barber){
- *     //the designated barber cuts hair
- *     if (barber == "Tina") {
- *         //customer gets hair cut by Tina
- *         wait(TinaBusy)
- *     } else if (barber == "Judy") {
- *         //haircut by Judy
- *         wait(JudyBusy)
- *     } else if (barber == "DontCare") {
- *         //hair cut by either barber
- *         wait(DontCareBusy)
- *     }
- * }
+ * The cut hair function that will make the given barber who is cutting hair busy.
+ * It takes the barber name as a string or "DontCare" if servicing a don't care customer.
+ * It will handle the necessary sleeping or cutting process that will be communicated
+ * with by the get_haircut function to successfully coordinate completion and termination
+ * of the hair cut session.
+ *
+ * void cut_hair(string barber)
+ */
+
+/**
+ * The get hair cut function that will make the given customer who is getting their hair
+ * cut busy. It will take a string of the line type the customer is from to determine
+ * how to interact with the barber when they are cutting the customer's hair. It will
+ * be communicated with by the cut_hair function in order to enable successful completion
+ * and termination of the hair cut session.
+ *
+ * void get_haircut(string customer_type)
  */
