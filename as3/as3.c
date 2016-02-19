@@ -29,7 +29,7 @@ counting semaphore Tina <- 0 //initially sleeping
 counting semaphore Judy <- 0 //initially sleeping
 
 //counting semaphores for the three line types
-counting semaphore TinaCusts <- 0  //initially closed (barber has to wake up to server customers)
+counting semaphore TinaCusts <- 0  //initially closed (barber has to wake up to serve customers)
 counting semaphore JudyCusts <- 0
 counting semaphore DontCareCusts <- 0
 
