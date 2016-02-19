@@ -16,13 +16,12 @@
 //mod is short for modulo operation.
 
 /*
-//counting semaphore
-semaphore Barbers <- 0
-
-//binary semaphores
-semaphore DontCareCusts <- 0
-semaphore TinaCusts <- 0
-semaphore JudyCusts <- 0
+//binary semaphores for Tina, Judy and the three different line types
+binary semaphore Tina <- 0 //initially sleeping
+binary semaphore Judy <- 0 //intially sleeping
+binary semaphore DontCareCusts <- 1
+binary semaphore TinaCusts <- 1
+binary semaphore JudyCusts <- 1
 
 int N <- 5, integer customer limit per line
 int TinaSeats[N] <- empty integer array of size N
@@ -32,21 +31,28 @@ int DontCareSeats[N] <- empty integer array of size N
 //used for determining a random hair cut time to pick
 int TIME_CAP <- 90 minutes
 
-//track the free seats for each line with separate counters
+//track the free seats for the Tina line
 int TinaFreeSeats <- N
-int TinaCustNextSeat <- 0
-Mutex TinaSeatAccess <- 1
+
+//index of the next customer seat as a rolling sum that resets using mod N
 int TinaCustNextSeat <- 0
 
+//leave Tina seat access open
+binary semaphore TinaSeatAccess <- 1
+
+//track free seats of Judy line
 int JudyFreeSeats <- N
-int JudyCustNextSeat <- 0
-Mutex JudySeatAccess <- 1
+
+//index for next Judy cust seat, resets with mod N
 int JudyCustNextSeat <- 0
 
+//initially open Judy seat access
+binary semaphore JudySeatAccess <- 1
+
+//dont-care version of above
 int DontCareFreeSeats <- N
 int DontCareCustNextSeat <- 0
-Mutex DontCareSeatAccess <- 1
-int DontCareCustNextSeat <- 0
+binary semaphore DontCareSeatAccess <- 1
 */
 
 //first solution: Tina
@@ -60,7 +66,7 @@ int DontCareCustNextSeat <- 0
  *
  *     while(true){
  *     	   //sleep until awoke by customer
- *         wait(Barbers)
+ *         wait(Tina)
  *
  *         //protect seat changes in Tina line
  *         wait(TinaSeatAccess)
@@ -97,7 +103,7 @@ int DontCareCustNextSeat <- 0
  *
  *     while(true){
  *     	   //sleep until awoke by customer
- *         wait(Barbers)
+ *         wait(Judy)
  *
  *         //protect seat changes
  *         wait(JudySeatAccess)
