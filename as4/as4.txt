@@ -2,13 +2,14 @@ Author: Shaun Howard, smh150@case.edu
 EECS 338 AS4 - Multiple Sleeping Barbers Problem with Monitors - Spring 2016
 
 Initial assumptions about haircuts:
-1. every process/thread is paired with a distinct process id or thread id
-2. every process/thread can access its own process id or thread id and will be referenced by type (Tina, Judy, TinaCust,
+1. Everything is a process (barbers, customers)
+2. Every process is paired with a distinct process id
+3. Every process can access its own process id and will be referenced by type (Tina, Judy, TinaCust,
 JudyCust, DontCareCust)
 
 Initial assumptions about environment of operation:
-processes/threads are released by a condition in the queuing order (FIFO)
-the maximum line length is 5 people and is denoted as N
+Processes are released by a condition in the queuing order (FIFO).
+The maximum line length is 5 people and is denoted as N.
 
 It is assumed there are three separate lines (3 queues), namely Tina-Only,
 Judy-Only and Dont-Care. Each type of customer will check their own line.
@@ -30,16 +31,16 @@ If a Dont-care customer arrives and the Dont-care line has <5 people and Tina is
 they will wait in the Dont-care line.
 
 Tina or Judy will stay awake if either has at least one customer (including dont-care customers).
-Once no customers are waiting in either their line or dont-care line, that barber will sleep
+Once no customers are waiting in both their line and the dont-care line, that barber will sleep
 until they are awoken by a customer.
 
 mod is short for modulo operation.
 int is short for integer data type.
-cond is short for condition data type
-enum is short for enumerated data type
-dc is short for don't-care
+cond is short for condition data type.
+enum is short for enumerated data type.
+dc is short for don't-care.
 
-If there is no waiting thread on a signaled condition variable, the signal is lost as if it
+If there is no process waiting on a signaled condition variable, the signal is lost as if it
 never occurred.
 
 Signaling/signaled process policy: Signaling proceses will continue to execute. Signaled 
@@ -52,6 +53,12 @@ then when condition A is signaled, customer A will be released first (before cus
 condition A, customer B will then be released.
 
 Monitor access is provided in FIFO order based on signaling process above.
+
+NOTE:
+The customer will create a tuple to add to their line's queue in order to wait in line. This tuple contains their pid
+and the time at which they arrived. The barber will use these tuples to determine which customer came first (time-wise)
+and then create another different tuple consisting of the customer's id and the customer type. This tuple is then used
+when giving the haircut.
 
 //solution begin
 
@@ -289,7 +296,7 @@ Monitor BarberShop {
     //Returns a tuple of the customer's pid and their CustType.
     tuple hello_customer(int bpid, BarbType b):
         tuple cust_tuple <- empty 2-tuple for (int, CustType)
-        if b == TINA:
+        if b == BarbType.TINA:
             //do Tina routine
             cust_tuple <- do_tina_hello()
         else:
