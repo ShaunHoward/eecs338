@@ -333,7 +333,10 @@ from the head of the queue. The capacity of the queue cannot be changed after in
 Any attempts to add to a full queue (max capacity reached) lead to the operation failing and returning false.
 Attempts to remove an element from an empty queue will also fail but return null. Fairness is guaranteed 
 by this queue by default. Fairness means that threads access the queue in FIFO order. This 
-will help avoid starvation.
+will help avoid starvation. 
+
+The BoundedFIFOQueue stores tuples of (int, long), in which the first tuple item is the customer's process id
+and the second tuple item is the time (in milliseconds) that the customer arrived at the barbershop.
 
 boolean add(tuple):
 Inserts the specified element at the tail of the queue instance if it is possible to do so
