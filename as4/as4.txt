@@ -49,39 +49,39 @@ process will be blocked until signaling process is blocked or leaves the monitor
 //solution begin
 
 Monitor BarberShop b <- new instance of BarberShop monitor
-enum CustType = {TINA_CUST, JUDY_CUST, DC_CUST}
-enum BarbType = {TINA, JUDY}
+enum CustType <- {TINA_CUST, JUDY_CUST, DC_CUST}
+enum BarbType <- {TINA, JUDY}
 
 Tina {
-	int pid <- barber process id
-    while (true) {
+    int pid <- barber process id
+    while true:
         //entry section
-	    //barber greets next customer or waits for customer to wake them up
-	    tuple cust_tuple <- b.hello_customer(pid, BarbType.TINA)
+	//barber greets next customer or waits for customer to wake them up
+	tuple cust_tuple <- b.hello_customer(pid, BarbType.TINA)
 
-	    //critical section
-	    //give haircut to customer using customer's pid and CustType
-	    b.give_haircut(cust_tuple[0], cust_tuple[1])
+	//critical section
+	//give haircut to customer using customer's pid and CustType
+	b.give_haircut(cust_tuple[0], cust_tuple[1])
 
-	    //exit section
+	//exit section
         //barber shows customer out
-    }   	
+    end while	
 }
 
 Judy {
-	int pid <- barber process id
-    while (true) {
-	    //entry section
-	    //barber greets next customer or waits for customer to wake them up
-	    tuple cust_tuple <- b.hello_customer(pid, BarbType.JUDY)
+    int pid <- barber process id
+    while true:
+        //entry section
+	//barber greets next customer or waits for customer to wake them up
+	tuple cust_tuple <- b.hello_customer(pid, BarbType.JUDY)
 
-	    //critical section
-	    //give haircut to customer using customer's pid and CustType
-	    b.give_haircut(cust_tuple[0], cust_tuple[1])
+	//critical section
+	//give haircut to customer using customer's pid and CustType
+	b.give_haircut(cust_tuple[0], cust_tuple[1])
 
-	    //exit section
-	    //barber shows customer out
-    }
+	//exit section
+	//barber shows customer out
+    end while
 }
 
 TinaCust {
@@ -89,53 +89,56 @@ TinaCust {
 
     //entry section
     //check if customer can get in line, otherwise leave
-	if b.enter_shop(pid, CustType.TINA_CUST):
-	    //critical section
-	    b.get_haircut(CustType.TINA_CUST)
-	
-	//exit section
-	//customer leaves
-	exit customer process
+    if b.enter_shop(pid, CustType.TINA_CUST):
+        //critical section
+        b.get_haircut(CustType.TINA_CUST)
+    end if
+    
+    //exit section
+    //customer leaves
+    exit customer process
 }
 
 JudyCust {
-	int pid <- customer process id
+    int pid <- customer process id
 
-	//entry section
-	//check if customer can get in line, otherwise leave
-	if b.enter_shop(pid, CustType.JUDY_CUST):
-	    //critical section
-	    b.get_haircut(CustType.JUDY_CUST)
+    //entry section
+    //check if customer can get in line, otherwise leave
+    if b.enter_shop(pid, CustType.JUDY_CUST):
+        //critical section
+        b.get_haircut(CustType.JUDY_CUST)
+    end if
     
     //exit section
-	//customer leaves
-	exit customer process
+    //customer leaves
+    exit customer process
 }
 
 DontCareCust {
     int pid <- customer process id
 
-	//entry section
-	//check if customer can get in line, otherwise leave
-	if b.enter_shop(pid, CustType.DC_CUST):
-	    //critical section
-	    b.get_haircut(CustType.DC_CUST)
+    //entry section
+    //check if customer can get in line, otherwise leave
+    if b.enter_shop(pid, CustType.DC_CUST):
+        //critical section
+        b.get_haircut(CustType.DC_CUST)
+    end if
     
     //exit section
-	//customer leaves
-	exit customer process
+    //customer leaves
+    exit customer process
 }
 
 Monitor BarberShop {
-	int N <- 5
-	condition ctinaline <- new condition instance
-	condition ctinasleeping <- new condition instance
-	condition ctinafree <- new condition instance
-	condition cjudyline <- new condition instance
-	condition cjudysleeping <- new condition instance
-	condition cjudyfree <- new condition instance
-	condition cdontcareline <- new condition instance
-	condition cdontcarefree <- new condition instance
+    int N <- 5
+    condition ctinaline <- new condition instance
+    condition ctinasleeping <- new condition instance
+    condition ctinafree <- new condition instance
+    condition cjudyline <- new condition instance
+    condition cjudysleeping <- new condition instance
+    condition cjudyfree <- new condition instance
+    condition cdontcareline <- new condition instance
+    condition cdontcarefree <- new condition instance
 
     BlockingFIFOQueue tina_line <- new blocking FIFO Queue of max capacity N
     BlockingFIFOQueue judy_line <- new blocking FIFO Queue of max capacity N
