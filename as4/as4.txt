@@ -138,13 +138,10 @@ DontCareCust {
 
 Monitor BarberShop {
     int N <- 5
-    condition ctinaline <- new condition instance
     condition ctinasleeping <- new condition instance
     condition ctinafree <- new condition instance
-    condition cjudyline <- new condition instance
     condition cjudysleeping <- new condition instance
     condition cjudyfree <- new condition instance
-    condition cdontcareline <- new condition instance
     condition cdontcarefree <- new condition instance
 
     BoundedFIFOQueue tina_line <- new bounded FIFO Queue of max capacity N
@@ -158,28 +155,22 @@ Monitor BarberShop {
         long arrival_time <- the current system time as this point in milliseconds
         tuple cust <- (pid, arrival_time)
         if t == CustType.TINA_CUST:
-            wait(ctinaline)
             //check and try to get in Tina line
             in_line <- tina_line.add(cust)
-            signal(ctinaline)
             if in_line:
                 //signal Tina to wake up
                 signal(ctinasleeping)
             end if
         else if t == CustType.JUDY_CUST:
-            wait(cjudyline)
             //check and try to get in Judy line
             in_line <- judy_line.add(cust)
-            signal(cjudyline)
             if in_line:
                 //signal Judy to wake up
                 signal(cjudysleeping)
             end if
         else:
-            wait(cdontcareline)
             //check and try to get in Dont-Care line
             in_line <- dc_line.add(cust)
-            signal(cdontcareline)
             if in_line:
                 //signal Tina to wake up
                 signal(ctinasleeping)
@@ -209,38 +200,23 @@ Monitor BarberShop {
     tuple do_tina_hello():
         int custid <- 0
         CustType t <- null
-        //wait for access to Tina and DC lines
-        wait(ctinaline)
-        wait(cdontcareline)
 
         //sleep if both Tina and DC lines are empty
         if tina_line.isEmpty() and dc_line.isEmpty():
-            //signal access back for Tina and DC lines
-            signal(ctinaline)
-            signal(cdontcareline)
-            
             //go to sleep
             wait(ctinasleeping)
-            
-            //wait for access to Tina and DC lines
-            wait(ctinaline)
-            wait(cdontcareline)
         end if
         
         //either Tina or DC line cannot be empty if Tina was woken up
         if dc_line.isEmpty():
             //do Tina customer if dont-care line is empty
-            signal(cdontcareline)
             tina_cust <- tina_line.poll()
             custid <- tina_cust[0]
-            signal(ctinaline)
             t <- CustType.TINA_CUST
         else if tina_line.isEmpty():
             //do Dont-care customer if Tina line is empty
-            signal(ctinaline)
             dc_cust <- dc_line.poll()
             custid <- dc_cust[0]
-            signal(dontcareline)
             t <- CustType.DC_CUST
         else:
             //do either Tina or DC customer depending on who came first (FCFS order)
@@ -249,18 +225,14 @@ Monitor BarberShop {
 
             //compare times of customers, earlier time is smaller
             if tina_cust[1] <= dc_cust[1]:
-                signal(cdontcareline)
                 //do tina customer if they have equal or earlier time
                 tina_cust <- tina_line.poll()
                 custid <- tina_cust[0]
-                signal(ctinaline)
                 t <- CustType.TINA_CUST
             else:
-                signal(ctinaline)
                 //do dont-care customer if they have earlier time
                 dc_cust <- dc_line.poll()
                 custid <- dc_cust[0]
-                signal(cdontcareline)
                 t <- CustType.DC_CUST
             end if
         end if
@@ -273,38 +245,23 @@ Monitor BarberShop {
     tuple do_judy_hello():
         int custid <- 0
         CustType t <- null
-        //wait for access to Judy and DC lines
-        wait(cjudyline)
-        wait(cdontcareline)
 
         //sleep if both Judy and DC lines are empty
         if judy_line.isEmpty() and dc_line.isEmpty():
-            //signal access back for Judy and DC lines
-            signal(cjudyline)
-            signal(cdontcareline)
-            
             //go to sleep
             wait(cjudysleeping)
-            
-            //wait for access to Judy and DC lines
-            wait(cjudyline)
-            wait(cdontcareline)
         end if
         
         //either Judy or DC line cannot be empty if Judy was woken up
         if dc_line.isEmpty():
             //do Judy customer if dont-care line is empty
-            signal(cdontcareline)
             judy_cust <- judy_line.poll()
             custid <- judy_cust[0]
-            signal(cjudyline)
             t <- CustType.JUDY_CUST
         else if judy_line.isEmpty():
             //do Dont-care customer if Judy line is empty
-            signal(cjudyline)
             dc_cust <- dc_line.poll()
             custid <- dc_cust[0]
-            signal(dontcareline)
             t <- CustType.DC_CUST
         else:
             //do either Judy or DC customer depending on who came first (FCFS order)
@@ -313,18 +270,14 @@ Monitor BarberShop {
 
             //compare times of customers, earlier time is smaller
             if judy_cust[1] <= dc_cust[1]:
-                signal(cdontcareline)
                 //do judy customer if they have equal or earlier time
                 judy_cust <- judy_line.poll()
                 custid <- judy_cust[0]
-                signal(cjudyline)
                 t <- CustType.JUDY_CUST
             else:
-                signal(cjudyline)
                 //do dont-care customer if they have earlier time
                 dc_cust <- dc_line.poll()
                 custid <- dc_cust[0]
-                signal(cdontcareline)
                 t <- CustType.DC_CUST
             end if
         end if
