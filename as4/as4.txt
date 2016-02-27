@@ -158,6 +158,7 @@ Monitor BarberShop {
             if in_line:
                 //signal Tina to wake up
                 signal(ctinasleeping)
+            end if
         else if t == CustType.JUDY_CUST:
             wait(cjudyline)
             //check and try to get in Judy line
@@ -166,6 +167,7 @@ Monitor BarberShop {
             if in_line:
                 //signal Judy to wake up
                 signal(cjudysleeping)
+            end if
         else:
             wait(cdontcareline)
             //check and try to get in Dont-Care line
@@ -174,7 +176,10 @@ Monitor BarberShop {
             if in_line:
                 //signal Tina to wake up
                 signal(ctinasleeping)
+            end if
+        end if
         return in_line
+    end enter_shop
  
 
     //Customer gets a haircut from a barber using this function
@@ -188,6 +193,8 @@ Monitor BarberShop {
         else:
             wait(cdontcarefree)
             //get haircut
+        end if
+    end get_haircut
 
 
     //Tina welcomes customer or sleeps and waits for customer with this function
@@ -211,6 +218,7 @@ Monitor BarberShop {
             //wait for access to Tina and DC lines
             wait(ctinaline)
             wait(cdontcareline)
+        end if
         
         //either Tina or DC line cannot be empty if Tina was woken up
         if dc_line.isEmpty():
@@ -247,7 +255,10 @@ Monitor BarberShop {
                 custid <- dc_cust[0]
                 signal(cdontcareline)
                 t <- CustType.DC_CUST
+            end if
+        end if
         return (custid, t)
+    end do_tina_hello
 
 
     //Judy welcomes customer or sleeps and waits for customer with this function
@@ -271,6 +282,7 @@ Monitor BarberShop {
             //wait for access to Judy and DC lines
             wait(cjudyline)
             wait(cdontcareline)
+        end if
         
         //either Judy or DC line cannot be empty if Judy was woken up
         if dc_line.isEmpty():
@@ -307,7 +319,10 @@ Monitor BarberShop {
                 custid <- dc_cust[0]
                 signal(cdontcareline)
                 t <- CustType.DC_CUST
+            end if
+        end if
         return (custid, t)
+    end do_judy_hello
 
 
     //Barber greets a new customer or sleeps and waits on a customer with this function
@@ -320,7 +335,9 @@ Monitor BarberShop {
         else:
             //do Judy routine
             cust_tuple <- do_judy_hello()
+        end if
         return cust_tuple
+    end hello_customer
 
 
     //Barber gives the current customer a haircut using this function
@@ -337,7 +354,8 @@ Monitor BarberShop {
         else:
             signal(cdontcarefree)
             //do haircut
-    
+        end if
+    end give_haircut
 }
 
 BlockingFIFOQueue is a bounded blocking queue backed by an array. It orders elements in first-
