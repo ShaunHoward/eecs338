@@ -45,6 +45,10 @@ never occurred.
 Signaling/signaled process policy: Signaling proceses will continue to execute. Signaled 
 process will be blocked until signaling process is blocked or leaves the monitor.
 
+Coniditon servicing policy: Processes waiting on a condition in a monitor will be serviced in FIFO order. This means that if
+customer A starts waiting on condition A before customer B starts waiting on condition A, then when condition A is
+signaled, customer A will be let through first (before customer B). Upon the second signal to condition A, customer B would
+then be let through.
 
 //solution begin
 
