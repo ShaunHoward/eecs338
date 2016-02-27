@@ -159,21 +159,21 @@ Monitor BarberShop {
             in_line <- tina_line.add(cust)
             if in_line:
                 //signal Tina to wake up
-                signal(ctinasleeping)
+                ctinasleeping.signal()
             end if
         else if t == CustType.JUDY_CUST:
             //check and try to get in Judy line
             in_line <- judy_line.add(cust)
             if in_line:
                 //signal Judy to wake up
-                signal(cjudysleeping)
+                cjudysleeping.signal()
             end if
         else:
             //check and try to get in Dont-Care line
             in_line <- dc_line.add(cust)
             if in_line:
                 //signal Tina to wake up
-                signal(ctinasleeping)
+                ctinasleeping.signal()
             end if
         end if
         return in_line
@@ -183,13 +183,13 @@ Monitor BarberShop {
     //Customer gets a haircut from a barber using this function
     void get_haircut(CustType t):
         if t == CustType.TINA_CUST:
-            wait(ctinafree)
+            ctinafree.wait()
             //get haircut
         else if t == CustType.JUDY_CUST:
-            wait(cjudyfree)
+            cjudyfree.wait()
             //get haircut
         else:
-            wait(cdontcarefree)
+            cdontcarefree.wait()
             //get haircut
         end if
     end get_haircut
@@ -204,7 +204,7 @@ Monitor BarberShop {
         //sleep if both Tina and DC lines are empty
         if tina_line.isEmpty() and dc_line.isEmpty():
             //go to sleep
-            wait(ctinasleeping)
+            ctinasleeping.wait()
         end if
         
         //either Tina or DC line cannot be empty if Tina was woken up
@@ -249,7 +249,7 @@ Monitor BarberShop {
         //sleep if both Judy and DC lines are empty
         if judy_line.isEmpty() and dc_line.isEmpty():
             //go to sleep
-            wait(cjudysleeping)
+            cjudysleeping.wait()
         end if
         
         //either Judy or DC line cannot be empty if Judy was woken up
@@ -306,13 +306,13 @@ Monitor BarberShop {
         //note that + is the string concatentation operation
         print "Hello customer " + string(custid) + ", welcome to Tina's Barbershop."
         if c == CustType.TINA_CUST:
-            signal(ctinafree)
+            ctinafree.signal()
             //do haircut
         else if c == CustType.JUDY_CUST:
-            signal(cjudyfree)
+            cjudyfree.signal()
             //do haircut
         else:
-            signal(cdontcarefree)
+            cdontcarefree.signal()
             //do haircut
         end if
     end give_haircut
