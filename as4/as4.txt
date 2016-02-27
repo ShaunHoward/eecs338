@@ -51,6 +51,8 @@ For example, if customer A starts waiting on condition A before customer B start
 then when condition A is signaled, customer A will be released first (before customer B). Upon the second signal to
 condition A, customer B will then be released.
 
+Monitor access is provided in FIFO order based on signaling process above.
+
 //solution begin
 
 Monitor BarberShop b <- new instance of BarberShop monitor
