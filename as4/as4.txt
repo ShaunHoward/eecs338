@@ -56,31 +56,31 @@ Tina {
     int pid <- barber process id
     while true:
         //entry section
-	//barber greets next customer or waits for customer to wake them up
-	tuple cust_tuple <- b.hello_customer(pid, BarbType.TINA)
+    //barber greets next customer or waits for customer to wake them up
+    tuple cust_tuple <- b.hello_customer(pid, BarbType.TINA)
 
-	//critical section
-	//give haircut to customer using customer's pid and CustType
-	b.give_haircut(cust_tuple[0], cust_tuple[1])
+    //critical section
+    //give haircut to customer using customer's pid and CustType
+    b.give_haircut(cust_tuple[0], cust_tuple[1])
 
-	//exit section
+    //exit section
         //barber shows customer out
-    end while	
+    end while    
 }
 
 Judy {
     int pid <- barber process id
     while true:
         //entry section
-	//barber greets next customer or waits for customer to wake them up
-	tuple cust_tuple <- b.hello_customer(pid, BarbType.JUDY)
+    //barber greets next customer or waits for customer to wake them up
+    tuple cust_tuple <- b.hello_customer(pid, BarbType.JUDY)
 
-	//critical section
-	//give haircut to customer using customer's pid and CustType
-	b.give_haircut(cust_tuple[0], cust_tuple[1])
+    //critical section
+    //give haircut to customer using customer's pid and CustType
+    b.give_haircut(cust_tuple[0], cust_tuple[1])
 
-	//exit section
-	//barber shows customer out
+    //exit section
+    //barber shows customer out
     end while
 }
 
@@ -146,35 +146,35 @@ Monitor BarberShop {
 
     //Customer enters the shop to check the line length for their favorite barber (or don't 
     //care option) using this function
-	boolean enter_shop(int pid, CustType t):
-	    boolean in_line <- false
-	    long arrival_time <- the current system time as this point in milliseconds
-		tuple cust <- (pid, arrival_time)
-		if t == CustType.TINA_CUST:
-		    wait(ctinaline)
-		    //check and try to get in Tina line
-		    in_line <- tina_line.add(cust)
-		    signal(ctinaline)
-		    if in_line:
-			    //signal Tina to wake up
-			    signal(ctinasleeping)
-		else if t == CustType.JUDY_CUST:
-		    wait(cjudyline)
-		    //check and try to get in Judy line
-		    in_line <- judy_line.add(cust)
-		    signal(cjudyline)
-		    if in_line:
-			    //signal Judy to wake up
-			    signal(cjudysleeping)
-		else:
-		    wait(cdontcareline)
-		    //check and try to get in Dont-Care line
-		    in_line <- dc_line.add(cust)
-		    signal(cdontcareline)
-		    if in_line:
-			    //signal Tina to wake up
-			    signal(ctinasleeping)
-		return in_line
+    boolean enter_shop(int pid, CustType t):
+        boolean in_line <- false
+        long arrival_time <- the current system time as this point in milliseconds
+        tuple cust <- (pid, arrival_time)
+        if t == CustType.TINA_CUST:
+            wait(ctinaline)
+            //check and try to get in Tina line
+            in_line <- tina_line.add(cust)
+            signal(ctinaline)
+            if in_line:
+                //signal Tina to wake up
+                signal(ctinasleeping)
+        else if t == CustType.JUDY_CUST:
+            wait(cjudyline)
+            //check and try to get in Judy line
+            in_line <- judy_line.add(cust)
+            signal(cjudyline)
+            if in_line:
+                //signal Judy to wake up
+                signal(cjudysleeping)
+        else:
+            wait(cdontcareline)
+            //check and try to get in Dont-Care line
+            in_line <- dc_line.add(cust)
+            signal(cdontcareline)
+            if in_line:
+                //signal Tina to wake up
+                signal(ctinasleeping)
+        return in_line
  
 
     //Customer gets a haircut from a barber using this function
@@ -193,8 +193,8 @@ Monitor BarberShop {
     //Tina welcomes customer or sleeps and waits for customer with this function
     //Returns a tuple with the customer's pid and their CustType.
     tuple do_tina_hello():
-	    int custid <- 0
-	    CustType t <- null
+        int custid <- 0
+        CustType t <- null
         //wait for access to Tina and DC lines
         wait(ctinaline)
         wait(cdontcareline)
@@ -232,7 +232,7 @@ Monitor BarberShop {
             tuple tina_cust <- tina_line.peek()
             tuple dc_cust <- dc_line.peek()
 
-	        //compare times of customers, earlier time is smaller
+            //compare times of customers, earlier time is smaller
             if tina_cust[1] <= dc_cust[1]:
                 signal(cdontcareline)
                 //do tina customer if they have equal or earlier time
@@ -247,14 +247,14 @@ Monitor BarberShop {
                 custid <- dc_cust[0]
                 signal(cdontcareline)
                 t <- CustType.DC_CUST
-	    return (custid, t)
+        return (custid, t)
 
 
     //Judy welcomes customer or sleeps and waits for customer with this function
     //Returns a tuple with the customer's pid and their CustType.
-	tuple do_judy_hello():
-	    int custid <- 0
-	    CustType t <- null
+    tuple do_judy_hello():
+        int custid <- 0
+        CustType t <- null
         //wait for access to Judy and DC lines
         wait(cjudyline)
         wait(cdontcareline)
@@ -292,7 +292,7 @@ Monitor BarberShop {
             tuple judy_cust <- judy_line.peek()
             tuple dc_cust <- dc_line.peek()
 
-	        //compare times of customers, earlier time is smaller
+            //compare times of customers, earlier time is smaller
             if judy_cust[1] <= dc_cust[1]:
                 signal(cdontcareline)
                 //do judy customer if they have equal or earlier time
@@ -307,14 +307,14 @@ Monitor BarberShop {
                 custid <- dc_cust[0]
                 signal(cdontcareline)
                 t <- CustType.DC_CUST
-	    return (custid, t)
+        return (custid, t)
 
 
     //Barber greets a new customer or sleeps and waits on a customer with this function
-	//Returns a tuple of the customer's pid and their CustType.
-	tuple hello_customer(int bpid, BarbType b):
-	    tuple cust_tuple <- empty 2-tuple for (int, CustType)
-	    if b == TINA:
+    //Returns a tuple of the customer's pid and their CustType.
+    tuple hello_customer(int bpid, BarbType b):
+        tuple cust_tuple <- empty 2-tuple for (int, CustType)
+        if b == TINA:
             //do Tina routine
             cust_tuple <- do_tina_hello()
         else:
@@ -323,20 +323,20 @@ Monitor BarberShop {
         return cust_tuple
 
 
-	//Barber gives the current customer a haircut using this function
-	//Considers Tina-only, Judy-only and Dont-care customers
-	void give_haircut(int custid, CustType c):
-	    //note that + is the string concatentation operation
-	    print "Hello customer " + string(custid) + ", welcome to Tina's Barbershop."
-	    if c == CustType.TINA_CUST:
-	        signal(ctinafree)
-	        //do haircut
-	    else if c == CustType.JUDY_CUST:
-	        signal(cjudyfree)
-	        //do haircut
-	    else:
-	        signal(cdontcarefree)
-	        //do haircut
+    //Barber gives the current customer a haircut using this function
+    //Considers Tina-only, Judy-only and Dont-care customers
+    void give_haircut(int custid, CustType c):
+        //note that + is the string concatentation operation
+        print "Hello customer " + string(custid) + ", welcome to Tina's Barbershop."
+        if c == CustType.TINA_CUST:
+            signal(ctinafree)
+            //do haircut
+        else if c == CustType.JUDY_CUST:
+            signal(cjudyfree)
+            //do haircut
+        else:
+            signal(cdontcarefree)
+            //do haircut
     
 }
 
