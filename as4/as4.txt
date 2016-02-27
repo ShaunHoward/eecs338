@@ -45,10 +45,11 @@ never occurred.
 Signaling/signaled process policy: Signaling proceses will continue to execute. Signaled 
 process will be blocked until signaling process is blocked or leaves the monitor.
 
-Coniditon servicing policy: Processes waiting on a condition in a monitor will be serviced in FIFO order. This means that if
-customer A starts waiting on condition A before customer B starts waiting on condition A, then when condition A is
-signaled, customer A will be let through first (before customer B). Upon the second signal to condition A, customer B would
-then be let through.
+Condition servicing policy: Processes waiting on a condition in a monitor will be serviced in first-come-first-serve order. 
+This means that each process that waits on a condition will be queued in FIFO order.
+For example, if customer A starts waiting on condition A before customer B starts waiting on condition A,
+then when condition A is signaled, customer A will be let through first (before customer B). Upon the second signal to
+condition A, customer B will then be let through.
 
 //solution begin
 
@@ -144,9 +145,9 @@ Monitor BarberShop {
     condition cdontcareline <- new condition instance
     condition cdontcarefree <- new condition instance
 
-    BlockingFIFOQueue tina_line <- new blocking FIFO Queue of max capacity N
-    BlockingFIFOQueue judy_line <- new blocking FIFO Queue of max capacity N
-    BlockingFIFOQueue dc_line <- new blocking FIFO Queue of max capacity N    
+    BoundedFIFOQueue tina_line <- new bounded FIFO Queue of max capacity N
+    BoundedFIFOQueue judy_line <- new bounded FIFO Queue of max capacity N
+    BoundedFIFOQueue dc_line <- new bounded FIFO Queue of max capacity N    
 
     //Customer enters the shop to check the line length for their favorite barber (or don't 
     //care option) using this function
@@ -362,13 +363,13 @@ Monitor BarberShop {
     end give_haircut
 }
 
-BlockingFIFOQueue is a bounded blocking queue backed by an array. It orders elements in first-
+BoundedFIFOQueue is a bounded queue backed by an array. It orders elements in first-
 in-first-out order. The head of the queue is the element on the queue for the longest amount
 of time. The tail of the queue is the element on the queue the shortest amount of time. New
 elements are inserted at the tail of the queue. The queue retrieval operations get elements
-at the head of the queue. The capacity of the queue cannot be changed after initialization. 
-Any attempts to add to a full queue (max capacity reached) lead to the operation blocking.
-Attempts to remove an element from an empty queue also will block. Fairness is guaranteed 
+from the head of the queue. The capacity of the queue cannot be changed after initialization. 
+Any attempts to add to a full queue (max capacity reached) lead to the operation failing and returning false.
+Attempts to remove an element from an empty queue will also fail but return null. Fairness is guaranteed 
 by this queue by default. Fairness means that threads access the queue in FIFO order. This 
 will help avoid starvation.
 
@@ -377,15 +378,15 @@ Inserts the specified element at the tail of the queue instance if it is possibl
 without exceeding the queue's capacity. Returns true upon success or false if queue at capacity.
 
 tuple peek():
-Retrieves the head of the queue, without removing it. Returns null if the queue is empty.
+Returns the head of the queue, without removing it. Returns null if the queue is empty.
 
 tuple poll():
-Retrives and removes the head of the queue. Returns null if the queue is empty.
+Returns and removes the head of the queue. Returns null if the queue is empty.
 
 int size():
-Returns the number of elements currently in this instance of the queue. Does not return the
+Returns the number of elements currently in this instance of the queue. Does not simply return the
 capacity of the queue.
 
 boolean isEmpty():
-Returns true when the current number of elements in the queue is 0. Returns false if there are
+Returns true when the current number of elements in the queue (size()) is 0. Returns false if there are
 any elements in the queue.
