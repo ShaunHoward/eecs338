@@ -2,12 +2,12 @@ Author: Shaun Howard, smh150@case.edu
 EECS 338 AS4 - Multiple Sleeping Barbers Problem with Monitors - Spring 2016
 
 Initial assumptions about haircuts:
-1. every thread is paired with a distinct process id
-2. every thread can access its own process id and will be referenced by type (Tina, Judy, Dont
-Care)
+1. every process/thread is paired with a distinct process id or thread id
+2. every process/thread can access its own process id or thread id and will be referenced by type (Tina, Judy, TinaCust,
+JudyCust, DontCareCust)
 
 Initial assumptions about environment of operation:
-threads are released by a condition in the queuing order (FIFO)
+processes/threads are released by a condition in the queuing order (FIFO)
 the maximum line length is 5 people and is denoted as N
 
 It is assumed there are three separate lines (3 queues), namely Tina-Only,
@@ -48,8 +48,8 @@ process will be blocked until signaling process is blocked or leaves the monitor
 Condition servicing policy: Processes waiting on a condition in a monitor will be serviced in first-come-first-serve order. 
 This means that each process that waits on a condition will be queued in FIFO order.
 For example, if customer A starts waiting on condition A before customer B starts waiting on condition A,
-then when condition A is signaled, customer A will be let through first (before customer B). Upon the second signal to
-condition A, customer B will then be let through.
+then when condition A is signaled, customer A will be released first (before customer B). Upon the second signal to
+condition A, customer B will then be released.
 
 //solution begin
 
