@@ -56,14 +56,14 @@ Tina {
     int pid <- barber process id
     while true:
         //entry section
-    //barber greets next customer or waits for customer to wake them up
-    tuple cust_tuple <- b.hello_customer(pid, BarbType.TINA)
+        //barber greets next customer or waits for customer to wake them up
+        tuple cust_tuple <- b.hello_customer(pid, BarbType.TINA)
 
-    //critical section
-    //give haircut to customer using customer's pid and CustType
-    b.give_haircut(cust_tuple[0], cust_tuple[1])
+        //critical section
+        //give haircut to customer using customer's pid and CustType
+        b.give_haircut(cust_tuple[0], cust_tuple[1])
 
-    //exit section
+        //exit section
         //barber shows customer out
     end while    
 }
@@ -72,15 +72,15 @@ Judy {
     int pid <- barber process id
     while true:
         //entry section
-    //barber greets next customer or waits for customer to wake them up
-    tuple cust_tuple <- b.hello_customer(pid, BarbType.JUDY)
+        //barber greets next customer or waits for customer to wake them up
+        tuple cust_tuple <- b.hello_customer(pid, BarbType.JUDY)
 
-    //critical section
-    //give haircut to customer using customer's pid and CustType
-    b.give_haircut(cust_tuple[0], cust_tuple[1])
+        //critical section
+        //give haircut to customer using customer's pid and CustType
+        b.give_haircut(cust_tuple[0], cust_tuple[1])
 
-    //exit section
-    //barber shows customer out
+        //exit section
+        //barber shows customer out
     end while
 }
 
