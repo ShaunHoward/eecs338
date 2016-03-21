@@ -1,0 +1,123 @@
+Deadlock Detection:
+
+-Method to resolve:
+1. Process Termination
+2. Preempty Resource lock
+
+-How often do we check?
+No answer, just a good practical question, per-system basis
+Suggestion: try to determine frequency of deadlock to determine how 
+often to check for deadlocks.
+
+--------------------------------------------------------------------
+Scheduling: (Chapter 6)
+
+No correct answer, per-system basis
+
+-Decide which process to execute next.
+
+Execute scheduling within the kernel.
+
+-Typical program behavior (2 types):
+1. I/O bound (short CPU bursts, mostly communicating with memory/device bus)
+2. CPU bound (long CPU bursts, heavier computation, little communicating with memory/devices)
+
+Who gets the CPU for how much time and in which order?
+
+-Scheduling algorithms:
+--Preemptive
+--Non-preemptive
+
+Stand by decision until CPU is free
+Scheduling outlined by FSM from first quiz.
+
+Scheduling graph
+|      busy  waiting  busy terminated busy
+|--> | work  | .... | work  | .... | work | ..
+|               i/o           free          etc
+|___________________________________________
+t ---->
+
+Scheduling Criteria:
+Maximize this criteria:
+1. CPU utilization
+--Make processor work as hard as it can on the operation
+--maximize this value
+
+2. Throughput
+--the number of processes completed within a time interval
+--maximize this value
+
+Minimize this criteria:
+3. Turnaround time
+--difference of time from when process is submitted to when the process completes
+--minimize this time
+
+4. Waiting time
+--amount of time process spends in ready state
+--minimize this time
+
+5. Response time
+--time between when a process is submitted vs when process gets to do work
+--minimize this time
+
+Preemption/Non-preemption:
+Interrupt longer jobs part-way through to let shorter jobs execute?
+
+Scheduling algorithms:
+1. First Come First Serve (FCFS)
+--Good when processes are similar in length
+
+2. Shortest Job First 
+--Sort tasks by length
+--danger: starvation 
+---shorter jobs keep arriving and starve out longer jobs
+
+3. Priority
+--assign all tasks priorities
+--sort in descending order of importance
+--outlined system had highest priority be lowest possible number, i.e. 0 so 0 has higher priority than 1
+--danger: starvation
+---higher priority jobs keep arriving, starve out lower priority jobs
+--possible starvation soln: priority is increased as job wait time increases
+
+4. Round Robin
+--set interval (burst time)
+--inefficiency: have to take max length burst from all jobs and allocate interval to be the length of that burst for all jobs
+
+5. Multilevel Queue
+--determine what kind of process something is and then
+send it into correct queue
+--each queue may use one of the other techniques to schedule i.e. 1, 2, 3 or 4
+--Possible scenario:
+Q: system processes
+Q: server processes
+Q: user processes
+
+6. Multilevel Feedback Queue
+--modification of 5
+--use feedback to potentially redistribute job into another queue based on scheduling criteria
+--thus, feedback can be taken in the form of factors effecting the algorithm satisfying the scheduling criteria
+
+Multiprocessor Scheduling:
+
+-how to balance load?
+--typical processors use symmetric multiprocessing
+---every processor has the same usefulness, treated equally
+---context switching has a cost, can be more expensive than busy-waiting. cost can be amplified by more complicated architectures, i.e. cache in multiple locations
+---processor affinity (another input to scheduling criteria) can be soft or hard
+----soft: suggestion of what processor the process should be on. estimating a higher-than-usual benefit from choosing suggested processor, but not necessarily guaranteed benefit
+----hard: hard decision of what processor to put process on, no variation
+---moving job to another processor invalidates the cache and it has to be re-populated
+---how do we move processes between processors?
+----pull
+----push
+----in reality, both usually happen
+
+
+
+
+
+
+
+
