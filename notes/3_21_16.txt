@@ -67,9 +67,10 @@ Interrupt longer jobs part-way through to let shorter jobs execute?
 Scheduling algorithms:
 1. First Come First Serve (FCFS)
 --Good when processes are similar in length
+--Bad if some tasks are longer than others (blocks shorter jobs)
 
 2. Shortest Job First 
---Sort tasks by length
+--Sort tasks by length (allows shorter jobs to go before longer jobs)
 --danger: starvation 
 ---shorter jobs keep arriving and starve out longer jobs
 

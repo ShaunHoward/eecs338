@@ -1,0 +1,98 @@
+assignment - use fork()
+sem_get(IPC_PRIVATE) - check out manpages
+system v semaphores
+
+Deadlock review:
+Chapter 7
+
+Solutinos to concurrent programming problems must balance
+-Safety
+--Something bad will not happen
+-Scalability
+-Liveness
+--Something good will eventually happen
+
+Deadlock requirements:
+1. Mutual Exclusion
+2. Hold-and-Wait
+--process that is waiting for a lock on one resource can be holding a lock for another resource
+3. No preemption
+--if a process has a lock, you cannot take it away
+4. Circular wait
+--system for requesting resources in system 
+
+Deadlock Prevention and Avoidance:
+
+To remove deadlocks, can invalidate one of above requirements.
+Typically invalidate circular waiting.
+
+3 approaches to achieve deadlock avoidance:
+1. Resource request ordering
+2. Resource allocation graph
+3. Banker's algortihm
+
+Common approach to avoid circular waiting:
+-have a consistent order for requesting resources
+
+i.e. 
+
+P1: wait(s1); wait(s2);
+P2: wait(s2); wait(s1);
+
+More complex approaches:
+(know they exist, not necessarily details)
+-Resource allocation graph algorithm
+-Banker's algorithm
+
+Handling deadlocks:
+1. Prevention
+2. Detect and Resolve
+3. Ignore them (windows/linux)
+
+Deadlock Detection:
+-Detect deadlocked states
+-Method to resolve
+--Process termination
+--Preempty resource lock
+-How often do we check?
+
+Can choose one with most memory, most resources locked, oldest waiting, newest.
+Need to determine which on per-system basis.
+
+Determine frequency of deadlock/probability of risk to determine how to handle deadlock.
+
+Scheduling Review: go over last classes notes.
+
+Burst is a time period allocated to process to do work.
+
+Turnaround time and response time are related.s
+
+Look over process lifecycle graph.
+
+Waiting time of process is sum of all the time it spends in the ready queue.
+
+Done by scheduler:
+Pull into processor if free.
+Push to another processor if this one is needed for something else.
+
+Thread Scheduling:
+-Process contention scope
+--threads compete within their own process
+-system contention scope
+
+Real-time OS:
+-Soft real-time (windows/linux)
+--set highest priority and configurable
+-Hard real-time (processes have deadlines) (lynx os)
+--not meeting deadline same as not having done any work
+
+How does it really work?
+
+Methods of evaluation:
+1. Deterministic modeling
+--scheduler may be non-deterministic, but if work-load is defined we can use this approach
+2. Simulation
+3. Implementation
+
+NOTE: potential process sub-scheduler
+
