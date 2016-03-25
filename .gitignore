@@ -1,3 +1,10 @@
+*.xml
+*.cproject
+*.project
+*.settings
+*.mk
+*.d
+
 # Object files
 *.o
 *.ko
