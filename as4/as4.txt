@@ -2,13 +2,14 @@ Author: Shaun Howard, smh150@case.edu
 EECS 338 AS4 - Multiple Sleeping Barbers Problem with Monitors - Spring 2016
 
 Initial assumptions about haircuts:
-1. every thread is paired with a distinct process id
-2. every thread can access its own process id and will be referenced by type (Tina, Judy, Dont
-Care)
+1. Everything is a process (barbers, customers)
+2. Every process is paired with a distinct process id
+3. Every process can access its own process id and will be referenced by type (Tina, Judy, TinaCust,
+JudyCust, DontCareCust)
 
 Initial assumptions about environment of operation:
-threads are released by a condition in the queuing order (FIFO)
-the maximum line length is 5 people and is denoted as N
+Processes are released by a condition in the queuing order (FIFO).
+The maximum line length is 5 people and is denoted as N.
 
 It is assumed there are three separate lines (3 queues), namely Tina-Only,
 Judy-Only and Dont-Care. Each type of customer will check their own line.
@@ -30,21 +31,34 @@ If a Dont-care customer arrives and the Dont-care line has <5 people and Tina is
 they will wait in the Dont-care line.
 
 Tina or Judy will stay awake if either has at least one customer (including dont-care customers).
-Once no customers are waiting in either their line or dont-care line, that barber will sleep
+Once no customers are waiting in both their line and the dont-care line, that barber will sleep
 until they are awoken by a customer.
 
 mod is short for modulo operation.
 int is short for integer data type.
-cond is short for condition data type
-enum is short for enumerated data type
-dc is short for don't-care
+cond is short for condition data type.
+enum is short for enumerated data type.
+dc is short for don't-care.
 
-If there is no waiting thread on a signaled condition variable, the signal is lost as if it
+If there is no process waiting on a signaled condition variable, the signal is lost as if it
 never occurred.
 
 Signaling/signaled process policy: Signaling proceses will continue to execute. Signaled 
 process will be blocked until signaling process is blocked or leaves the monitor.
 
+Condition servicing policy: Processes waiting on a condition in a monitor will be serviced in first-come-first-serve order. 
+This means that each process that waits on a condition will be queued in FIFO order.
+For example, if customer A starts waiting on condition A before customer B starts waiting on condition A,
+then when condition A is signaled, customer A will be released first (before customer B). Upon the second signal to
+condition A, customer B will then be released.
+
+Monitor access is provided in FIFO order based on signaling process above.
+
+NOTE:
+The customer will create a tuple to add to their line's queue in order to wait in line. This tuple contains their pid
+and the time at which they arrived. The barber will use these tuples to determine which customer came first (time-wise)
+and then create another different tuple consisting of the customer's id and the customer type. This tuple is then used
+when giving the haircut.
 
 //solution begin
 
@@ -131,18 +145,15 @@ DontCareCust {
 
 Monitor BarberShop {
     int N <- 5
-    condition ctinaline <- new condition instance
     condition ctinasleeping <- new condition instance
     condition ctinafree <- new condition instance
-    condition cjudyline <- new condition instance
     condition cjudysleeping <- new condition instance
     condition cjudyfree <- new condition instance
-    condition cdontcareline <- new condition instance
     condition cdontcarefree <- new condition instance
 
-    BlockingFIFOQueue tina_line <- new blocking FIFO Queue of max capacity N
-    BlockingFIFOQueue judy_line <- new blocking FIFO Queue of max capacity N
-    BlockingFIFOQueue dc_line <- new blocking FIFO Queue of max capacity N    
+    BoundedFIFOQueue tina_line <- new bounded FIFO Queue of max capacity N
+    BoundedFIFOQueue judy_line <- new bounded FIFO Queue of max capacity N
+    BoundedFIFOQueue dc_line <- new bounded FIFO Queue of max capacity N    
 
     //Customer enters the shop to check the line length for their favorite barber (or don't 
     //care option) using this function
@@ -151,31 +162,25 @@ Monitor BarberShop {
         long arrival_time <- the current system time as this point in milliseconds
         tuple cust <- (pid, arrival_time)
         if t == CustType.TINA_CUST:
-            wait(ctinaline)
             //check and try to get in Tina line
             in_line <- tina_line.add(cust)
-            signal(ctinaline)
             if in_line:
                 //signal Tina to wake up
-                signal(ctinasleeping)
+                ctinasleeping.signal()
             end if
         else if t == CustType.JUDY_CUST:
-            wait(cjudyline)
             //check and try to get in Judy line
             in_line <- judy_line.add(cust)
-            signal(cjudyline)
             if in_line:
                 //signal Judy to wake up
-                signal(cjudysleeping)
+                cjudysleeping.signal()
             end if
         else:
-            wait(cdontcareline)
             //check and try to get in Dont-Care line
             in_line <- dc_line.add(cust)
-            signal(cdontcareline)
             if in_line:
                 //signal Tina to wake up
-                signal(ctinasleeping)
+                ctinasleeping.signal()
             end if
         end if
         return in_line
@@ -185,13 +190,13 @@ Monitor BarberShop {
     //Customer gets a haircut from a barber using this function
     void get_haircut(CustType t):
         if t == CustType.TINA_CUST:
-            wait(ctinafree)
+            ctinafree.wait()
             //get haircut
         else if t == CustType.JUDY_CUST:
-            wait(cjudyfree)
+            cjudyfree.wait()
             //get haircut
         else:
-            wait(cdontcarefree)
+            cdontcarefree.wait()
             //get haircut
         end if
     end get_haircut
@@ -202,38 +207,23 @@ Monitor BarberShop {
     tuple do_tina_hello():
         int custid <- 0
         CustType t <- null
-        //wait for access to Tina and DC lines
-        wait(ctinaline)
-        wait(cdontcareline)
 
         //sleep if both Tina and DC lines are empty
         if tina_line.isEmpty() and dc_line.isEmpty():
-            //signal access back for Tina and DC lines
-            signal(ctinaline)
-            signal(cdontcareline)
-            
             //go to sleep
-            wait(ctinasleeping)
-            
-            //wait for access to Tina and DC lines
-            wait(ctinaline)
-            wait(cdontcareline)
+            ctinasleeping.wait()
         end if
         
         //either Tina or DC line cannot be empty if Tina was woken up
         if dc_line.isEmpty():
             //do Tina customer if dont-care line is empty
-            signal(cdontcareline)
             tina_cust <- tina_line.poll()
             custid <- tina_cust[0]
-            signal(ctinaline)
             t <- CustType.TINA_CUST
         else if tina_line.isEmpty():
             //do Dont-care customer if Tina line is empty
-            signal(ctinaline)
             dc_cust <- dc_line.poll()
             custid <- dc_cust[0]
-            signal(dontcareline)
             t <- CustType.DC_CUST
         else:
             //do either Tina or DC customer depending on who came first (FCFS order)
@@ -242,18 +232,14 @@ Monitor BarberShop {
 
             //compare times of customers, earlier time is smaller
             if tina_cust[1] <= dc_cust[1]:
-                signal(cdontcareline)
                 //do tina customer if they have equal or earlier time
                 tina_cust <- tina_line.poll()
                 custid <- tina_cust[0]
-                signal(ctinaline)
                 t <- CustType.TINA_CUST
             else:
-                signal(ctinaline)
                 //do dont-care customer if they have earlier time
                 dc_cust <- dc_line.poll()
                 custid <- dc_cust[0]
-                signal(cdontcareline)
                 t <- CustType.DC_CUST
             end if
         end if
@@ -266,38 +252,23 @@ Monitor BarberShop {
     tuple do_judy_hello():
         int custid <- 0
         CustType t <- null
-        //wait for access to Judy and DC lines
-        wait(cjudyline)
-        wait(cdontcareline)
 
         //sleep if both Judy and DC lines are empty
         if judy_line.isEmpty() and dc_line.isEmpty():
-            //signal access back for Judy and DC lines
-            signal(cjudyline)
-            signal(cdontcareline)
-            
             //go to sleep
-            wait(cjudysleeping)
-            
-            //wait for access to Judy and DC lines
-            wait(cjudyline)
-            wait(cdontcareline)
+            cjudysleeping.wait()
         end if
         
         //either Judy or DC line cannot be empty if Judy was woken up
         if dc_line.isEmpty():
             //do Judy customer if dont-care line is empty
-            signal(cdontcareline)
             judy_cust <- judy_line.poll()
             custid <- judy_cust[0]
-            signal(cjudyline)
             t <- CustType.JUDY_CUST
         else if judy_line.isEmpty():
             //do Dont-care customer if Judy line is empty
-            signal(cjudyline)
             dc_cust <- dc_line.poll()
             custid <- dc_cust[0]
-            signal(dontcareline)
             t <- CustType.DC_CUST
         else:
             //do either Judy or DC customer depending on who came first (FCFS order)
@@ -306,18 +277,14 @@ Monitor BarberShop {
 
             //compare times of customers, earlier time is smaller
             if judy_cust[1] <= dc_cust[1]:
-                signal(cdontcareline)
                 //do judy customer if they have equal or earlier time
                 judy_cust <- judy_line.poll()
                 custid <- judy_cust[0]
-                signal(cjudyline)
                 t <- CustType.JUDY_CUST
             else:
-                signal(cjudyline)
                 //do dont-care customer if they have earlier time
                 dc_cust <- dc_line.poll()
                 custid <- dc_cust[0]
-                signal(cdontcareline)
                 t <- CustType.DC_CUST
             end if
         end if
@@ -329,7 +296,7 @@ Monitor BarberShop {
     //Returns a tuple of the customer's pid and their CustType.
     tuple hello_customer(int bpid, BarbType b):
         tuple cust_tuple <- empty 2-tuple for (int, CustType)
-        if b == TINA:
+        if b == BarbType.TINA:
             //do Tina routine
             cust_tuple <- do_tina_hello()
         else:
@@ -346,42 +313,45 @@ Monitor BarberShop {
         //note that + is the string concatentation operation
         print "Hello customer " + string(custid) + ", welcome to Tina's Barbershop."
         if c == CustType.TINA_CUST:
-            signal(ctinafree)
+            ctinafree.signal()
             //do haircut
         else if c == CustType.JUDY_CUST:
-            signal(cjudyfree)
+            cjudyfree.signal()
             //do haircut
         else:
-            signal(cdontcarefree)
+            cdontcarefree.signal()
             //do haircut
         end if
     end give_haircut
 }
 
-BlockingFIFOQueue is a bounded blocking queue backed by an array. It orders elements in first-
+BoundedFIFOQueue is a bounded queue backed by an array. It orders elements in first-
 in-first-out order. The head of the queue is the element on the queue for the longest amount
 of time. The tail of the queue is the element on the queue the shortest amount of time. New
 elements are inserted at the tail of the queue. The queue retrieval operations get elements
-at the head of the queue. The capacity of the queue cannot be changed after initialization. 
-Any attempts to add to a full queue (max capacity reached) lead to the operation blocking.
-Attempts to remove an element from an empty queue also will block. Fairness is guaranteed 
+from the head of the queue. The capacity of the queue cannot be changed after initialization. 
+Any attempts to add to a full queue (max capacity reached) lead to the operation failing and returning false.
+Attempts to remove an element from an empty queue will also fail but return null. Fairness is guaranteed 
 by this queue by default. Fairness means that threads access the queue in FIFO order. This 
-will help avoid starvation.
+will help avoid starvation. 
+
+The BoundedFIFOQueue stores tuples of (int, long), in which the first tuple item is the customer's process id
+and the second tuple item is the time (in milliseconds) that the customer arrived at the barbershop.
 
 boolean add(tuple):
 Inserts the specified element at the tail of the queue instance if it is possible to do so
 without exceeding the queue's capacity. Returns true upon success or false if queue at capacity.
 
 tuple peek():
-Retrieves the head of the queue, without removing it. Returns null if the queue is empty.
+Returns the head of the queue, without removing it. Returns null if the queue is empty.
 
 tuple poll():
-Retrives and removes the head of the queue. Returns null if the queue is empty.
+Returns and removes the head of the queue. Returns null if the queue is empty.
 
 int size():
-Returns the number of elements currently in this instance of the queue. Does not return the
+Returns the number of elements currently in this instance of the queue. Does not simply return the
 capacity of the queue.
 
 boolean isEmpty():
-Returns true when the current number of elements in the queue is 0. Returns false if there are
+Returns true when the current number of elements in the queue (size()) is 0. Returns false if there are
 any elements in the queue.
