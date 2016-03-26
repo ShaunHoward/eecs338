@@ -25,6 +25,7 @@ int main(int argc, char *argv[]){
 
 	print_process_barrier(false, shared->waiting_c, shared->waiting_h);
 
+	// are there enough h and c atoms to make CH4?
 	if (shared->waiting_h >= 3 && shared->waiting_c >= 1) {
 		int i;
 		for(i = 0; i < 3; i++)
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]){
 		my_sem_sig(semid, S);
 		print_full_set();
 	} else {
+		// if not enough c or h atoms, hydrogen has to wait
 		shared->waiting_h += 1;
 		my_sem_sig(semid, S);
 		my_sem_wait(semid, SH);

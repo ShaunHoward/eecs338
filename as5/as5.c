@@ -5,41 +5,35 @@
 // seed random with this
 time_t t;
 
-void dec_to_str (char* str, int val, size_t digits)
-{
-      size_t i=1u;
-
-        for(; i<=digits; i++)
-              {
-                      str[digits-i] = (char)((val % 10u) + '0');
-                          val/=10u;
-                            }
-
-          str[i-1u] = '\0'; // assuming you want null terminated strings?
-}
-
 // used to execute carbon atom process
 void carbon(int semid, int shmid) {
+	// convert the semid and shmid into characters
     char semidbuf[1];
     char shmidbuf[1];
-    dec_to_str(semidbuf, semid, 1);
-    dec_to_str(shmidbuf, semid, 1);
+    sprintf(semidbuf, "%d", semid);
+    sprintf(shmidbuf, "%d", shmid);
+
+    // run carbon with semid and shmid
     execl("carbon", "carbon", semidbuf, shmidbuf, NULL);
-    perror("execl");
+
     // error when exec returns
+    perror("execl");
     exit(EXIT_FAILURE);
 }
 
 // used to execute hydrogen atom process
 void hydrogen(int semid, int shmid) {
-    char semidbuf[1];
+	// convert the semid and shmid into characters
+	char semidbuf[1];
     char shmidbuf[1];
-    dec_to_str(semidbuf, semid, 1);
-    dec_to_str(shmidbuf, semid, 1);
+    sprintf(semidbuf, "%d", semid);
+    sprintf(shmidbuf, "%d", shmid);
 
+    // run hydrogen with semid and shmid
 	execl("hydrogen", "hydrogen", semidbuf, shmidbuf, NULL);
-	perror("execl");
+
 	// error if exec returns
+	perror("execl");
 	exit(EXIT_FAILURE);
 }
 
@@ -85,15 +79,16 @@ int main(int argc, char *argv[]) {
 	// initialize shared memory
 	shared->waiting_c = 0;
 	shared->waiting_h = 0;
-	int ret_val = 0;
-	int i;
+
+    // count number of carb and hydro atoms randomly spawned
 	int carb_count = 0;
 	int hydro_count = 0;
-	int atom_count = ATOM_COUNT;
 
 	// do random execution
-	for (i = 0; i < atom_count; i++) {
-		// spawn carbon atom when rand even
+	int i;
+	int ret_val = 0;
+	for (i = 0; i < ATOM_COUNT; i++) {
+		// spawn carbon atom when rand odd
 		int val = rand();
 		if (val % 2 != 0) {
 			if ((ret_val = fork()) == 0){
@@ -105,7 +100,7 @@ int main(int argc, char *argv[]) {
 				carb_count++;
 			}
 		} else {
-			// otherwise, spawn hydrogen atom when rand odd
+			// otherwise, spawn hydrogen atom when rand even
 			if ((ret_val = fork()) == 0)
 				hydrogen(semid, shmid);
 			else if (ret_val < 0){
@@ -117,14 +112,19 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+
+	// determine number of carbon atoms already satisfied
 	int num_carb_satisfied = hydro_count / 4;
+	// determine hydrogen left over from previous spawn loop
 	int hydro_left_over = hydro_count % 4;
+	// determine number of carbon left to satisfy
 	int num_carb_left = carb_count - num_carb_satisfied;
+	// determine number of hydrogen needed to satisfy all carbons
 	int num_hydro_left = (num_carb_left * 4) - hydro_left_over;
 
-	// compensate for mis-matched spawning
+	// compensate for mis-matched spawning with extra hydrogen
 	for (i = 0; i < num_hydro_left; i++) {
-		printf("making another hydrogen\n");
+		printf("Spawning extra hydrogen...\n");
 		fflush(stdout);
 		// spawn hydrogen atom
 		if ((ret_val = fork()) == 0){
@@ -135,12 +135,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	atom_count += num_hydro_left;
+	int total_atom_count = ATOM_COUNT + num_hydro_left;
 
     // wait for all atoms to be destroyed, even though science states that's impossible
-    for (i = 0; i < atom_count; i++) {
+    for (i = 0; i < total_atom_count; i++) {
     	fflush(stdout);
-    	printf("waiting for process %d to exit...\n", i);
+    	printf("Waiting for process %d to exit...\n", i);
     	fflush(stdout);
     	if (wait(0) < 0) {
     		perror("wait");

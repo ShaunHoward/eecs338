@@ -38,9 +38,9 @@ struct common {
 void print_spawn_atom(bool is_carbon) {
 	fflush(stdout);
 	if (is_carbon == true)
-		printf("carbon atom is being spawned\n");
+		printf("Carbon atom is being spawned...\n");
 	else
-		printf("hydrogen atom is being spawned\n");
+		printf("Hydrogen atom is being spawned...\n");
 	fflush(stdout);
 	return;
 }
@@ -48,20 +48,20 @@ void print_spawn_atom(bool is_carbon) {
 void print_process_barrier(bool is_carbon, int num_waiting_c, int num_waiting_h){
 	fflush(stdout);
 	if (is_carbon == true)
-		printf("carbon atom has reached barrier\n");
+		printf("Carbon atom has reached barrier...\n");
 	else
-		printf("hydrogen atom has reached barrier\n");
+		printf("Hydrogen atom has reached barrier...\n");
 	fflush(stdout);
-	printf("curr number C atoms waiting: %d\n", num_waiting_c);
+	printf("Curr number C atoms waiting: %d\n", num_waiting_c);
 	fflush(stdout);
-	printf("curr number H atoms waiting: %d\n", num_waiting_h);
+	printf("Curr number H atoms waiting: %d\n", num_waiting_h);
 	fflush(stdout);
 	return;
 }
 
 void print_full_set(){
 	fflush(stdout);
-	printf("a full set of C and H processes have crossed the barrier!\n");
+	printf("A full set of C and H processes have crossed the barrier!\n");
 	fflush(stdout);
 	return;
 }
