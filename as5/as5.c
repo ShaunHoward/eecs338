@@ -5,17 +5,39 @@
 // seed random with this
 time_t t;
 
+void dec_to_str (char* str, int val, size_t digits)
+{
+      size_t i=1u;
+
+        for(; i<=digits; i++)
+              {
+                      str[digits-i] = (char)((val % 10u) + '0');
+                          val/=10u;
+                            }
+
+          str[i-1u] = '\0'; // assuming you want null terminated strings?
+}
+
 // used to execute carbon atom process
-void carbon(void) {
-	execl("carbon", "carbon", 0, NULL);
-	perror("execl");
-	// error when exec returns
-	exit(EXIT_FAILURE);
+void carbon(int semid, int shmid) {
+    char semidbuf[1];
+    char shmidbuf[1];
+    dec_to_str(semidbuf, semid, 1);
+    dec_to_str(shmidbuf, semid, 1);
+    execl("carbon", "carbon", semidbuf, shmidbuf, NULL);
+    perror("execl");
+    // error when exec returns
+    exit(EXIT_FAILURE);
 }
 
 // used to execute hydrogen atom process
-void hydrogen(void) {
-	execl("hydrogen", "hydrogen", 0, NULL);
+void hydrogen(int semid, int shmid) {
+    char semidbuf[1];
+    char shmidbuf[1];
+    dec_to_str(semidbuf, semid, 1);
+    dec_to_str(shmidbuf, semid, 1);
+
+	execl("hydrogen", "hydrogen", semidbuf, shmidbuf, NULL);
 	perror("execl");
 	// error if exec returns
 	exit(EXIT_FAILURE);
@@ -31,7 +53,7 @@ int main(int argc, char *argv[]) {
 	// seed random
 	srand((unsigned)time(&t));
 
-	if ((semid = semget(SEM_KEY, SEM_COUNT, IPC_CREAT)) < 0) {
+	if ((semid = semget(IPC_PRIVATE, SEM_COUNT, 0777)) < 0) {
 		perror("semget_main");
 		exit(EXIT_FAILURE);
 	}
@@ -49,7 +71,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// find memory id for shared
-	if ((shmid = shmget(SHM_KEY, 1*K, IPC_CREAT)) < 0) {
+	if ((shmid = shmget(IPC_PRIVATE, 1*K, 0777)) < 0) {
 		perror("shmget_main");
 		exit(EXIT_FAILURE);
 	}
@@ -75,7 +97,7 @@ int main(int argc, char *argv[]) {
 		int val = rand();
 		if (val % 2 != 0) {
 			if ((ret_val = fork()) == 0){
-				carbon();
+				carbon(semid, shmid);
 			} else if (ret_val < 0) {
 				perror("fork");
 				exit(EXIT_FAILURE);
@@ -85,7 +107,7 @@ int main(int argc, char *argv[]) {
 		} else {
 			// otherwise, spawn hydrogen atom when rand odd
 			if ((ret_val = fork()) == 0)
-				hydrogen();
+				hydrogen(semid, shmid);
 			else if (ret_val < 0){
 				perror("fork");
 				exit(EXIT_FAILURE);
@@ -106,7 +128,7 @@ int main(int argc, char *argv[]) {
 		fflush(stdout);
 		// spawn hydrogen atom
 		if ((ret_val = fork()) == 0){
-			hydrogen();
+			hydrogen(semid, shmid);
 		} else if (ret_val < 0) {
 			perror("fork");
 			exit(EXIT_FAILURE);

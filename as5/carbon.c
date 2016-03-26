@@ -6,22 +6,11 @@ struct common *shared;
 
 int main(int argc, char *argv[]){
 	int semid, shmid;
+    semid = atoi(argv[1]);
+    shmid = atoi(argv[2]);
 
 	int my_pid = getpid();
-	if ((semid = semget(SEM_KEY, SEM_COUNT, IPC_CREAT)) < 0) {
-		perror("semget");
-		exit(EXIT_FAILURE);
-	}
-	if ((shmid = shmget(SHM_KEY, 1*K, IPC_CREAT)) < 0) {
-		perror("shmget");
-		exit(EXIT_FAILURE);
-	}
-	if ((shared = (struct common *)shmat(shmid, 0, 0)) < 0) {
-		perror("shmat");
-		exit(EXIT_FAILURE);
-	}
-
-	print_spawn_atom(true);
+    print_spawn_atom(true);
 	my_sem_wait(semid, S);
 
 	fflush(stdout);
