@@ -51,9 +51,14 @@ Handling deadlocks:
 
 Deadlock Detection:
 -Detect deadlocked states
--Method to resolve
+-Deadlock detection is the process of actually determining that a deadlock exists and identifying
+ the processes and resources involved in the deadlock. The basic idea is to check allocation
+ against resource availability for all possible allocation sequences to determine if the system
+ is in deadlocked state a.
+
+-Deadlock Resolution:
 --Process termination
---Preempty resource lock
+--Preemptive resource lock
 -How often do we check?
 
 Can choose one with most memory, most resources locked, oldest waiting, newest.
