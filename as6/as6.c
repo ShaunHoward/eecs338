@@ -5,64 +5,86 @@
 // seed random with this
 time_t t;
 
+// initialize shared memory and semaphores
+struct common *shared;
+Semaphore* sem[SEM_COUNT];
+
 // used to execute carbon atom process
-void carbon(int semid, int shmid) {
-	// convert the semid and shmid into characters
-    char semidbuf[1];
-    char shmidbuf[1];
-    sprintf(semidbuf, "%d", semid);
-    sprintf(shmidbuf, "%d", shmid);
+void *carbon(void *arg) {
+	thread_data_t *data = (thread_data_t *)arg;
 
-    // run carbon with semid and shmid
-    execl("carbon", "carbon", semidbuf, shmidbuf, NULL);
+    print_spawn_atom(true);
+	my_sem_wait(sem[S]);
 
-    // error when exec returns
-    perror("execl");
-    exit(EXIT_FAILURE);
+	int my_pid = getpid();
+	fflush(stdout);
+	printf("carbon (C) atom %d is created\n", my_pid);
+	fflush(stdout);
+
+	print_process_barrier(true, shared->waiting_c, shared->waiting_h);
+
+	// are there enough h atoms waiting to make CH4?
+	if (shared->waiting_h >= 4) {
+		int i;
+		for(i = 0; i < 4; i++)
+			my_sem_sig(sem[SH]);
+		shared->waiting_h -= 4;
+		my_sem_sig(sem[S]);
+		print_full_set();
+	} else {
+		// if not enough h atoms, carbon has to wait
+		shared->waiting_c += 1;
+		my_sem_sig(sem[S]);
+		my_sem_wait(sem[SC]);
+	}
+	exit(EXIT_SUCCESS);
 }
 
 // used to execute hydrogen atom process
-void hydrogen(int semid, int shmid) {
-	// convert the semid and shmid into characters
-	char semidbuf[1];
-    char shmidbuf[1];
-    sprintf(semidbuf, "%d", semid);
-    sprintf(shmidbuf, "%d", shmid);
+void *hydrogen(void *arg) {
+	thread_data_t *data = (thread_data_t *)arg;
 
-    // run hydrogen with semid and shmid
-	execl("hydrogen", "hydrogen", semidbuf, shmidbuf, NULL);
+	print_spawn_atom(false);
+	my_sem_wait(sem[S]);
 
-	// error if exec returns
-	perror("execl");
-	exit(EXIT_FAILURE);
+	int my_pid = getpid();
+	fflush(stdout);
+	printf("hydrogen (H) atom %d is created\n", my_pid);
+	fflush(stdout);
+
+	print_process_barrier(false, shared->waiting_c, shared->waiting_h);
+
+	// are there enough h and c atoms to make CH4?
+	if (shared->waiting_h >= 3 && shared->waiting_c >= 1) {
+		int i;
+		for(i = 0; i < 3; i++)
+			my_sem_sig(sem[SH]);
+		shared->waiting_h -= 3;
+		my_sem_sig(sem[SC]);
+		shared->waiting_c -= 1;
+		my_sem_sig(sem[S]);
+		print_full_set();
+	} else {
+		// if not enough c or h atoms, hydrogen has to wait
+		shared->waiting_h += 1;
+		my_sem_sig(sem[S]);
+		my_sem_wait(sem[SH]);
+	}
+	exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
 	int semid, shmid;
-	unsigned short sem_vals[SEM_COUNT];
-	struct common *shared;
+    pthread_t initial_threads[ATOM_COUNT];
 
-	// initialize semaphore space
-	union semin semctlarg;
 	// seed random
 	srand((unsigned)time(&t));
 
-	if ((semid = semget(IPC_PRIVATE, SEM_COUNT, 0777)) < 0) {
-		perror("semget_main");
-		exit(EXIT_FAILURE);
-	}
-
-    // initialize semaphore values
-	sem_vals[S] = S_VAL;
-	sem_vals[SH] = SH_VAL;
-	sem_vals[SC] = SC_VAL;
-	semctlarg.array = sem_vals;
-
-    // initialize actual semaphores
-	if ((semctl(semid, SEM_COUNT, SETALL, semctlarg)) < 0) {
-		perror("semctl_main_1");
-		exit(EXIT_FAILURE);
-	}
+    // initialize the semaphores using predefined values for the sequential CH4 prod. problem
+	// use helper function to initialize semaphores
+	sem[S] = make_semaphore(S_VAL);
+	sem[SH] = make_semaphore(SH_VAL);
+	sem[SC] = make_semaphore(SC_VAL);
 
 	// find memory id for shared
 	if ((shmid = shmget(IPC_PRIVATE, 1*K, 0777)) < 0) {
@@ -86,32 +108,27 @@ int main(int argc, char *argv[]) {
 
 	// do random execution
 	int i;
-	int ret_val = 0;
+	int ret_code = 0;
 	for (i = 0; i < ATOM_COUNT; i++) {
 		// spawn carbon atom when rand odd
 		int val = rand();
 		if (val % 2 != 0) {
-			if ((ret_val = fork()) == 0){
-				carbon(semid, shmid);
-			} else if (ret_val < 0) {
-				perror("fork");
-				exit(EXIT_FAILURE);
-			} else {
-				carb_count++;
+			if ((ret_code = pthread_create(&initial_threads[i], NULL, carbon, i))) {
+			    fprintf(stderr, "error: C pthread_create, %d\n", ret_code);
+				fflush(stderr);
+			    return EXIT_FAILURE;
 			}
+			carb_count++;
 		} else {
 			// otherwise, spawn hydrogen atom when rand even
-			if ((ret_val = fork()) == 0)
-				hydrogen(semid, shmid);
-			else if (ret_val < 0){
-				perror("fork");
-				exit(EXIT_FAILURE);
-			} else {
-				hydro_count++;
+			if ((ret_code = pthread_create(&initial_threads[i], NULL, hydrogen, i))) {
+			    fprintf(stderr, "error: H pthread_create, %d\n", ret_code);
+			    fflush(stderr);
+				return EXIT_FAILURE;
 			}
+			hydro_count++;
 		}
 	}
-
 
 	// determine number of carbon atoms already satisfied
 	int num_carb_satisfied = hydro_count / 4;
@@ -121,17 +138,17 @@ int main(int argc, char *argv[]) {
 	int num_carb_left = carb_count - num_carb_satisfied;
 	// determine number of hydrogen needed to satisfy all carbons
 	int num_hydro_left = (num_carb_left * 4) - hydro_left_over;
+	pthread_t extra_h_threads[num_hydro_left];
 
 	// compensate for mis-matched spawning with extra hydrogen
 	for (i = 0; i < num_hydro_left; i++) {
 		printf("Spawning extra hydrogen...\n");
 		fflush(stdout);
 		// spawn hydrogen atom
-		if ((ret_val = fork()) == 0){
-			hydrogen(semid, shmid);
-		} else if (ret_val < 0) {
-			perror("fork");
-			exit(EXIT_FAILURE);
+		if ((ret_code = pthread_create(&initial_threads[i], NULL, hydrogen, i))) {
+		    fprintf(stderr, "error: H pthread_create, %d\n", ret_code);
+		    fflush(stderr);
+			return EXIT_FAILURE;
 		}
 	}
 
@@ -142,9 +159,14 @@ int main(int argc, char *argv[]) {
     	fflush(stdout);
     	printf("Waiting for process %d to exit...\n", i);
     	fflush(stdout);
-    	if (wait(0) < 0) {
-    		perror("wait");
-    		exit(EXIT_FAILURE);
+    	if (i < ATOM_COUNT){
+    		if ((ret_code = pthread_join(initial_threads[i], NULL))) {
+    			fprintf(stderr, "error: initial pthread_join, %d\n", ret_code);
+    		}
+    	} else {
+			if ((ret_code = pthread_join(extra_h_threads[i], NULL))) {
+				fprintf(stderr, "error: additional H pthread_join, %d\n", ret_code);
+			}
     	}
     }
 

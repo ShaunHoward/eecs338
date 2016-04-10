@@ -1,13 +1,16 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/errno.h>
+#include <string.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <time.h>
 #include <unistd.h>
 #define SEM_KEY 100
@@ -23,17 +26,59 @@
 #define SH_VAL 0
 typedef enum { false, true } bool;
 
-
-// initialize semaphores
-union semin {
-	unsigned short *array;
-};
-
 // define the common shared memory
 struct common {
 	int waiting_c;
 	int waiting_h;
 };
+
+typedef struct _thread_data_t {
+	int tid;//thread id
+	int semid;
+	int shmid;
+} thread_data_t;
+
+void perror_exit(char *s) {
+	perror(s);
+	exit(EXIT_FAILURE);
+}
+
+void *check_malloc(int size) {
+  void *p = malloc (size);
+  if (p == NULL)
+	  perror_exit("malloc failed");
+  return p;
+}
+
+// Safely encapsulate posix semaphore
+typedef sem_t Semaphore;
+
+// Make easy to use methods to encapsulate sem procedures
+Semaphore *make_semaphore(int value);
+void semaphore_wait(Semaphore *sem);
+void semaphore_signal(Semaphore *sem);
+
+Semaphore *make_semaphore(int value) {
+  Semaphore *sem = check_malloc(sizeof(Semaphore));
+  int sem_ret_code = sem_init(sem, 0, value);
+  if (sem_ret_code != 0)
+    perror_exit("Error initializing semaphore");
+  return sem;
+}
+
+// define nice, easy wrapper for sem waiting
+void my_sem_wait(Semaphore *sem) {
+  int sem_ret_code = sem_wait(sem);
+  if (sem_ret_code != 0)
+    perror_exit("Error waiting on semaphore");
+}
+
+// define nice, easy wrapper for sem signaling
+void my_sem_signal(Semaphore *sem) {
+  int sem_ret_code = sem_post(sem);
+  if (sem_ret_code != 0)
+    perror_exit("Error signaling semaphore");
+}
 
 void print_spawn_atom(bool is_carbon) {
 	fflush(stdout);
@@ -63,23 +108,5 @@ void print_full_set(){
 	fflush(stdout);
 	printf("A full set of C and H processes have crossed the barrier!\n");
 	fflush(stdout);
-	return;
-}
-
-void my_sem_wait(int semid, int sem_val) {
-	struct sembuf sem_wait_buf;
-	sem_wait_buf.sem_op = -1;
-	sem_wait_buf.sem_flg = 0;
-	sem_wait_buf.sem_num = sem_val;
-	semop(semid, &sem_wait_buf, 1);
-	return;
-}
-
-void my_sem_sig(int semid, int sem_val) {
-	struct sembuf sem_sig_buf;
-	sem_sig_buf.sem_op = 1;
-	sem_sig_buf.sem_flg = 0;
-	sem_sig_buf.sem_num = sem_val;
-	semop(semid, &sem_sig_buf, 1);
 	return;
 }
