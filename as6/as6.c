@@ -21,12 +21,12 @@ void *carbon(void *arg) {
 	// print that the atom spawned
     print_spawn_atom(true);
 
-    // wait for mutex
-	my_sem_wait(sem[S]);
-
 	fflush(stdout);
 	printf("carbon (C) atom %d is created\n", tid);
 	fflush(stdout);
+
+    // wait for mutex
+	my_sem_wait(sem[S]);
 
 	// print that the thread has reached the barrier and the
 	// curr waiting c and h atom counts
@@ -59,12 +59,12 @@ void *hydrogen(void *arg) {
 	// print that atom spawned
 	print_spawn_atom(false);
 
-	// wait for mutex
-	my_sem_wait(sem[S]);
-
 	fflush(stdout);
 	printf("hydrogen (H) atom %d is created\n", tid);
 	fflush(stdout);
+
+	// wait for mutex
+	my_sem_wait(sem[S]);
 
 	// print that atom is at thread barrier
 	print_thread_barrier(false, waiting_c, waiting_h);
