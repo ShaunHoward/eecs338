@@ -196,10 +196,13 @@ int main() {
     printf("Sequential CH4 making complete. Semaphores are being removed.\n");
     fflush(stdout);
 
-    // destroy the semaphores
+    // destroy the semaphores and free memory
     destroy_sem(sem[S]);
+    free(sem[S]);
     destroy_sem(sem[SC]);
+    free(sem[SC]);
     destroy_sem(sem[SH]);
+    free(sem[SH]);
 
     fflush(stdout);
     printf("Exiting sequential CH4 program...\n");

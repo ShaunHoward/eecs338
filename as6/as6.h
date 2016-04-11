@@ -58,6 +58,8 @@ void *check_malloc(int size) {
   return p;
 }
 
+
+
 Semaphore *make_semaphore(int value) {
   Semaphore *sem = check_malloc(sizeof(Semaphore));
   int sem_ret_code = sem_init(sem, 0, value);
