@@ -13,9 +13,6 @@
 #include <semaphore.h>
 #include <time.h>
 #include <unistd.h>
-#define SEM_KEY 100
-#define SHM_KEY 100
-#define K 1024
 #define ATOM_COUNT 25
 #define SEM_COUNT 3
 #define S 0
@@ -26,30 +23,6 @@
 #define SH_VAL 0
 typedef enum { false, true } bool;
 
-// define the common shared memory
-struct common {
-	int waiting_c;
-	int waiting_h;
-};
-
-typedef struct _thread_data_t {
-	int tid;//thread id
-	int semid;
-	int shmid;
-} thread_data_t;
-
-void perror_exit(char *s) {
-	perror(s);
-	exit(EXIT_FAILURE);
-}
-
-void *check_malloc(int size) {
-  void *p = malloc (size);
-  if (p == NULL)
-	  perror_exit("malloc failed");
-  return p;
-}
-
 // Safely encapsulate posix semaphore
 typedef sem_t Semaphore;
 
@@ -57,6 +30,33 @@ typedef sem_t Semaphore;
 Semaphore *make_semaphore(int value);
 void semaphore_wait(Semaphore *sem);
 void semaphore_signal(Semaphore *sem);
+
+// wrap thread data, just tid
+typedef struct _thread_data_t {
+	int tid;//thread id
+} thread_data_t;
+
+// wrap error checking and exiting with failure
+void perror_exit(char *s) {
+	perror(s);
+	exit(EXIT_FAILURE);
+}
+
+// wrap semaphore destruction
+void destroy_sem(Semaphore *s){
+	int dest_ret_code = sem_destroy(s);
+	if (dest_ret_code != 0)
+		perror_exit("Error destroying semaphore");
+	return;
+}
+
+// run malloc for the specified size and error check
+void *check_malloc(int size) {
+  void *p = malloc (size);
+  if (p == NULL)
+	  perror_exit("malloc failed");
+  return p;
+}
 
 Semaphore *make_semaphore(int value) {
   Semaphore *sem = check_malloc(sizeof(Semaphore));
@@ -71,13 +71,15 @@ void my_sem_wait(Semaphore *sem) {
   int sem_ret_code = sem_wait(sem);
   if (sem_ret_code != 0)
     perror_exit("Error waiting on semaphore");
+  return;
 }
 
 // define nice, easy wrapper for sem signaling
-void my_sem_signal(Semaphore *sem) {
+void my_sem_sig(Semaphore *sem) {
   int sem_ret_code = sem_post(sem);
   if (sem_ret_code != 0)
     perror_exit("Error signaling semaphore");
+  return;
 }
 
 void print_spawn_atom(bool is_carbon) {
@@ -90,7 +92,7 @@ void print_spawn_atom(bool is_carbon) {
 	return;
 }
 
-void print_process_barrier(bool is_carbon, int num_waiting_c, int num_waiting_h){
+void print_thread_barrier(bool is_carbon, int num_waiting_c, int num_waiting_h){
 	fflush(stdout);
 	if (is_carbon == true)
 		printf("Carbon atom has reached barrier...\n");
@@ -106,7 +108,7 @@ void print_process_barrier(bool is_carbon, int num_waiting_c, int num_waiting_h)
 
 void print_full_set(){
 	fflush(stdout);
-	printf("A full set of C and H processes have crossed the barrier!\n");
+	printf("A full set of C and H threads have crossed the barrier!\n");
 	fflush(stdout);
 	return;
 }
