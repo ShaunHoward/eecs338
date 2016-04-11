@@ -102,7 +102,6 @@ void print_thread_barrier(bool is_carbon, int num_waiting_c, int num_waiting_h){
 		printf("Hydrogen atom has reached barrier...\n");
 	fflush(stdout);
 	printf("Curr number C atoms waiting: %d\n", num_waiting_c);
-	fflush(stdout);
 	printf("Curr number H atoms waiting: %d\n", num_waiting_h);
 	fflush(stdout);
 	return;

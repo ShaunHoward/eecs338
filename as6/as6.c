@@ -205,7 +205,7 @@ int main() {
     free(sem[SH]);
 
     fflush(stdout);
-    printf("Exiting sequential CH4 program...\n");
+    printf("Exiting sequential CH4 process...\n");
     fflush(stdout);
 
     return EXIT_SUCCESS;
