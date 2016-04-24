@@ -18,6 +18,9 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 	// initially, store error result
 	static int  result = -1;
 
+	printf("[%s] Client %d sent a GET Request", get_time(), *argp);
+    fflush(stdout);
+
 	//check if there are any messages received from clients other than the one specified
     int i;
     for (i = 0; i < sizeof(client_msgs); i++){
@@ -37,6 +40,10 @@ int *
 put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
 	static int  result = -1;
+
+	printf("[%s] Client %d sent a PUT Request", get_time(), argp->id);
+    fflush(stdout);
+
 	if (curr_index < MSG_LIMIT){
 	    // store client id and message
 		client_msgs[curr_index].id = argp->id;

@@ -5,12 +5,26 @@
  */
 
 #include "main.h"
+#include "sentence_generator.h"
 #include <unistd.h>
+#define NUM_PUTS 5
+
+void print_status(int status) {
+    // print success or error message
+    if (status == 0) {
+        printf ("[%s] Success response from server.", get_time());
+    } else {
+        printf("[%s] Failure response from server.", get_time());
+    }
+    fflush(stdout);
+}
 
 void
 display_prg_1(char *host)
 {
 	CLIENT *clnt;
+	// get the host id integer
+	int host_id = host[0] - '0';
 	int  *result_1;
 	int  get_1_arg;
 	int  *result_2;
@@ -24,14 +38,56 @@ display_prg_1(char *host)
 	}
 #endif	/* DEBUG */
 
-	result_1 = get_1(&get_1_arg, clnt);
-	if (result_1 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	int i;
+	// client puts random message to server NUM_PUTS times
+	for (i = 0; i < NUM_PUTS; i++) {
+	    // set host id in message
+        put_1_arg.id = host_id;
+
+		// generate and set random string for message
+        char* random_str = generate_sentence();
+        strcpy(put_1_arg.message, random_str);
+
+        // print put request message
+	    printf ("[%s] Client %d sent a PUT request.", get_time(), host_id);
+	    fflush(stdout);
+
+        // put generated message with id onto server
+		result_2 = put_1(&put_1_arg, clnt);
+		// signal error if occurs
+	    if (result_2 == (int *) NULL) {
+		    clnt_perror (clnt, "call failed");
+	    }
+
+	    // print the status of the server response
+        print_status(result_2);
+
+	    // sleep one second between puts
+	    sleep(1);
 	}
-	result_2 = put_1(&put_1_arg, clnt);
-	if (result_2 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}
+
+	// sleep a total of 5 seconds
+	// sleep 4 more seconds (already slept 1 second from last iteration of loop)
+    sleep(4);
+
+    // client calls get from server 2*NUM_PUTS times
+    for (i = 0; i < 2*NUM_PUTS; i++) {
+    	// print get request message
+    	printf("[%s] Client %d sent a GET request.", get_time(), host_id);
+    	fflush(stdout);
+
+    	// call get on server
+    	result_1 = get_1(&get_1_arg, clnt);
+    	if (result_1 == (int *) NULL) {
+    		clnt_perror (clnt, "call failed");
+    	}
+
+    	// print the status of the server response
+        print_status(result_1);
+    	// sleep one second between gets
+    	sleep(1);
+    }
+
 #ifndef	DEBUG
 	clnt_destroy (clnt);
 #endif	 /* DEBUG */
@@ -49,5 +105,5 @@ main (int argc, char *argv[])
 	}
 	host = argv[1];
 	display_prg_1 (host);
-exit (0);
+    exit (0);
 }

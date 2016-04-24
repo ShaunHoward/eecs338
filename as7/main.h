@@ -7,6 +7,8 @@
 #define _MAIN_H_RPCGEN
 
 #include <rpc/rpc.h>
+#include <stdio.h>
+#include <time.h>
 
 // define the number of msgs possible to store on server
 #define MSG_LIMIT 15
@@ -15,11 +17,12 @@
 extern "C" {
 #endif
 
-
+// client data contains the client id and a message to store
 struct client_data {
 	int id;
 	char message[8000];
 };
+
 typedef struct client_data client_data;
 
 #define DISPLAY_PRG 0x20000101
@@ -57,5 +60,15 @@ extern bool_t xdr_client_data ();
 #ifdef __cplusplus
 }
 #endif
+
+// gets the current time and date, returns as a string
+char* get_time () {
+	time_t rawtime;
+	struct tm * timeinfo;
+
+	time (&rawtime);
+	timeinfo = localtime (&rawtime);
+	return asctime (timeinfo);
+}
 
 #endif /* !_MAIN_H_RPCGEN */
