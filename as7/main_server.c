@@ -84,11 +84,11 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     
     // should be between 0 and 2 if in id list, else cannot see any messages
     int client_id = -1;
-    
+    int real_client_id = *argp;
     // get client id
     for (i = 0; i < 3; i++) {
     	// check to see where the client is in the server client list
-    	if (client_list[i] == *argp){
+    	if (client_list[i] == real_client_id){
     		// found the client, now set it to keep track
     		client_id = i;
     		// translated client id, now leave loop
@@ -100,7 +100,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     for (i = 0; i < MSG_LIMIT; i++){
     	if (client_id >= 0 && client_id <= 2 && i > curr_client_indices[client_id]){
             // check if the client id is in the list of ids and not equal to this id
-			if (client_msg_ids[i] != client_id && client_msg_ids[i] != -1){
+			if (client_msg_ids[i] != real_client_id && client_msg_ids[i] >= 0){
 				// set success status
 				result = 0;
 				// update the current client message index
