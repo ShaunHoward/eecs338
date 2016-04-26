@@ -10,6 +10,7 @@
 #include <unistd.h>
 #define NUM_PUTS 5
 
+char curr_time[26];
 // sets the current time and date to the "curr_time" char buffer
 void set_time() {
 	time_t rawtime;
