@@ -147,11 +147,17 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 
 		// store id in ordered id list
 		client_ids[curr_index] = argp->id;
+
 		// store client msg
 	    strcpy(client_msgs[curr_index].message, argp->message);
-	    // set the available messages for each user
-	    for (i = 0; i < 3; i++)
-	        client_id_list[i][curr_index] = client_ids[curr_index];
+	    int j;
+
+	    // update the available messages for each user
+	    for (i = curr_index; i < MSG_LIMIT; i++) {
+	        for (j = 0; j < 3; i++) {
+	            client_id_list[j][i] = client_ids[i];
+	        }
+	    }
 	    // increment current client msg index
 	    curr_index += 1;
 	    // set result to 0
