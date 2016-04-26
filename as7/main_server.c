@@ -76,8 +76,8 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 	//check if there are any messages received from clients other than the one specified
     int i;
     for (i = 0; i < sizeof(client_msgs); i++){
+		printf("checked here once");
     	if (client_msgs[i].id != *argp){
-    		printf("checked here once");
     		result += 1;
     	}
     }
