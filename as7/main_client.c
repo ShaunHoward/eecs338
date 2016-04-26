@@ -10,7 +10,9 @@
 #include <unistd.h>
 #define NUM_PUTS 5
 
+// store the current time in a global array of 26 chars
 char curr_time[26];
+
 // sets the current time and date to the "curr_time" char buffer
 void set_time() {
 	time_t rawtime;
@@ -21,6 +23,7 @@ void set_time() {
 		curr_time[0] = 0;
 	}
 
+	// get the current time in ms
 	time (&rawtime);
 	if (rawtime == ((time_t)-1)) {
 		perror("error generating time information...");
@@ -28,24 +31,30 @@ void set_time() {
 		return;
 	}
 
+	// convert time to local time
 	timeinfo = localtime (&rawtime);
     if (timeinfo == NULL) {
         perror("error converting time to local time...");
         curr_time[0] = 0;
         return;
     }
+
+    // convert time to asctime
     asctime_r(timeinfo, curr_time);
 	if (curr_time == NULL) {
 		perror("error converting time to asc time...");
 		curr_time[0] = 0;
 		return;
 	}
+
+	// remove newline from end, just put terminator
 	int new_line = strlen(curr_time) - 1;
 	if (curr_time[new_line] == '\n') {
 		curr_time[new_line] = '\0';
 	}
 }
 
+// prints the response status from the server given the int code, 0 is success
 void print_status(int status) {
 	set_time();
     // print success or error message
@@ -57,18 +66,25 @@ void print_status(int status) {
     fflush(stdout);
 }
 
+// uses the fortune program to generate a random string, returns a pointer to that string
 char *get_random_string(){
-    // uses the fortune program to generate a random string
     FILE *fp;
 
     // variables for creating random string
     char *random_str = NULL;
     char *temp = NULL;
+
+    // use a temporary buffer to incrementally gather results
     char buf[100];
+
+    // maintain size variables for dynamically adjusting the string size
     unsigned int size = 1;
     unsigned int str_length;
 
+    // call fortune to generate a real random string
     fp = popen("fortune", "r");
+
+    // error-check fortune teller response
     if (fp == NULL) {
         perror("Error running fortune to generate random string...");
 	    fflush(stderr);
@@ -79,16 +95,23 @@ char *get_random_string(){
 	    return "error generating random string...";
     }
 
+    // attain your fortune by writing all string characters to random_str incrementally
     while (fgets(buf, sizeof(buf), fp) != NULL) {
+    	// get the current buf size
     	str_length = strlen(buf);
+    	// dynamically reallocate the random string with a new size
         temp = realloc(random_str, size + str_length);
+        // error-check reallocation
     	if (temp == NULL) {
         	perror("temporary random string memory allocation failed...");
             return "";
         } else {
+        	// set the random string on success
         	random_str = temp;
         }
+    	// copy the buffer to the random string
         strcpy(random_str + size - 1, buf);
+        // increase the size variable by the added string length
         size += str_length;
 
     	// get all characters for string
@@ -98,6 +121,7 @@ char *get_random_string(){
 
     printf("got random string: %s\n", random_str);
 
+    // error-check closing fortune process
 	if (pclose(fp) == -1){
 	    perror("Error closing fortune process...");
 	    return "error closing fortune process...";

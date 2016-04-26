@@ -17,7 +17,6 @@
 extern "C" {
 #endif
 
-char curr_time[26];
 
 // client data contains the client id and a message to store
 struct client_data {
