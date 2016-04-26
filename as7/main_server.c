@@ -135,13 +135,7 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 	    		break;
 	    	}
 	    }
-	    // add user to client list only if necessary
-	    if (client_id == -1){
-			// add this client to the clients list
-			client_list[curr_client] = argp->id;
-			// increment curr client counter
-			curr_client += 1;
-	    }
+
 	    // store client id
 		client_msgs[curr_index].id = argp->id;
 
@@ -154,9 +148,16 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 
 	    // update the available messages for each user
 	    for (i = curr_index; i < MSG_LIMIT; i++) {
-	        for (j = 0; j < 3; i++) {
+	        for (j = 0; j < curr_client; i++) {
 	            client_id_list[j][i] = client_ids[i];
 	        }
+	    }
+	    // add user to client list only if necessary
+	    if (client_id == -1){
+			// add this client to the clients list
+			client_list[curr_client] = argp->id;
+			// increment curr client counter
+			curr_client += 1;
 	    }
 	    // increment current client msg index
 	    curr_index += 1;
