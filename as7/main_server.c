@@ -12,13 +12,12 @@ int is_initialized = 0;
 // allocate space for each of 3 clients to put 5 messages on the server
 struct client_data client_msgs[MSG_LIMIT];
 int i = 0;
-//
-//void init_client_data(){
-//	for (i=0; i< sizeof(client_msgs); i++) {
-//		client_msgs[i].id = -1;
-//	    strcpy(client_msgs[i].message, "initialized");
-//	}
-//}
+
+void init_client_data(){
+	for (i=0; i< sizeof(client_msgs); i++) {
+		client_msgs[i].id = -1;
+	}
+}
 
 
 // store the current client msg index, which should be at max equal to MSG_LIMIT
@@ -63,10 +62,10 @@ int *
 get_1_svc(int *argp, struct svc_req *rqstp)
 {
 	// initialize client data if not already done
-//	if (is_initialized == 0) {
-//		is_initialized += 1;
-//		init_client_data();
-//	}
+	if (is_initialized == 0) {
+		is_initialized += 1;
+		init_client_data();
+	}
 	// initially, store error result
 	static int  result = -1;
     set_time();
@@ -76,7 +75,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 	//check if there are any messages received from clients other than the one specified
     int i;
     for (i = 0; i < sizeof(client_msgs); i++){
-    	if (&client_msgs[i].id != argp){
+    	if (client_msgs[i].id != -1 && client_msgs[i].id != *argp){
     		printf("checked here once");
     		result += 1;
     	}
@@ -92,7 +91,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 int *
 put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
-	// initialize client data if not already done
+	// initialize client data if not already dones
 //	if (is_initialized == 0) {
 //		is_initialized += 1;
 //		init_client_data();
