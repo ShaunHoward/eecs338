@@ -62,17 +62,6 @@ void set_time() {
 	}
 }
 
-// returns 1 if the given id is in the list, 0 if not
-int is_in_id_list(int id){
-	int i = 0;
-	for (i = 0; i < MSG_LIMIT; i++){
-		if (id == client_ids[i] && id != -1){
-			return 1;
-		}
-	}
-	return 0;
-}
-
 // Removes the msg at the specified index from the client_msgs array
 void remove_from_msg_list(int index){
 	if (index > 0 && index < MSG_LIMIT){
@@ -96,13 +85,9 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     int client_id = *argp;
     for (i = 0; i < MSG_LIMIT; i++){
         // check if the client id is in the list of ids and not equal to this id
-    	if (is_in_id_list(client_msgs[i].id) == 1 && client_msgs[i].id != client_id){
-            remove_from_msg_list(i);
-            result = 0;
-            printf("in id list block...client id is: %d\n", client_msgs[i].id);
-            // break from loop, we have a winner
-            break;
-    	}
+		if (client_ids[i] != client_id && client_ids[i] != -1){
+			result += 1;
+		}
     }
 
     // check if any messages were found, set success result if so
