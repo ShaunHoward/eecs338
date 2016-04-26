@@ -66,7 +66,7 @@ void set_time() {
 int is_in_id_list(int id){
 	int i = 0;
 	for (i = 0; i < MSG_LIMIT; i++){
-		if (id == client_ids[i]){
+		if (id == client_ids[i] && id != -1){
 			return 1;
 		}
 	}
@@ -77,6 +77,7 @@ int is_in_id_list(int id){
 void remove_from_msg_list(int index){
 	if (index > 0 && index < MSG_LIMIT){
 		client_msgs[index].id = -1;
+		client_ids[index] = -1;
 	}
 }
 
@@ -98,7 +99,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     	if (is_in_id_list(client_msgs[i].id) == 1 && client_msgs[i].id != client_id){
             remove_from_msg_list(i);
             result = 0;
-            printf("in is in id list block...client id is: %d\n", client_msgs[i].id);
+            printf("in id list block...client id is: %d\n", client_msgs[i].id);
             // break from loop, we have a winner
             break;
     	}
