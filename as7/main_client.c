@@ -134,7 +134,7 @@ display_prg_1(char *host)
 {
 	CLIENT *clnt;
 	// get the host id integer
-	int host_id = host[0] - '0';
+	int host_id = (rand() * 5) / 2;
 	int  *result_1;
 	int  get_1_arg;
 	int  *result_2;
