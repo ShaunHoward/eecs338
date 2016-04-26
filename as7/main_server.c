@@ -63,10 +63,10 @@ int *
 get_1_svc(int *argp, struct svc_req *rqstp)
 {
 	// initialize client data if not already done
-//	if (is_initialized == 0) {
-//		is_initialized += 1;
-//		init_client_data();
-//	}
+	if (is_initialized == 0) {
+		is_initialized += 1;
+		init_client_data();
+	}
 	// initially, store error result
 	static int  result = -1;
     set_time();
@@ -92,10 +92,10 @@ int *
 put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
 	// initialize client data if not already dones
-//	if (is_initialized == 0) {
-//		is_initialized += 1;
-//		init_client_data();
-//	}
+	if (is_initialized == 0) {
+		is_initialized += 1;
+		init_client_data();
+	}
 
 	static int  result = -1;
 	set_time();
