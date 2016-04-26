@@ -159,16 +159,10 @@ display_prg_1(char *host)
 	// sleep 4 more seconds (already slept 1 second from last iteration of loop)
     sleep(4);
 
-#ifndef	DEBUG
-	clnt = clnt_create (host, DISPLAY_PRG, DISPLAY_VER, "tcp");
-	if (clnt == NULL) {
-		clnt_pcreateerror (host);
-		exit (1);
-	}
-#endif	/* DEBUG */
-
     // client calls get from server 2*NUM_PUTS times
     for (i = 0; i < 2*NUM_PUTS; i++) {
+    	// set host id in message
+        get_1_arg = host_id;
     	set_time();
     	// print get request message
     	printf("[%s] Client %d sent a GET request.\n", curr_time, host_id);
