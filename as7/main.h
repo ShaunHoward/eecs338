@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+char curr_time[26];
+
 // client data contains the client id and a message to store
 struct client_data {
 	int id;
@@ -61,14 +63,6 @@ extern bool_t xdr_client_data ();
 }
 #endif
 
-// gets the current time and date, returns as a string
-char* get_time () {
-	time_t rawtime;
-	struct tm * timeinfo;
 
-	time (&rawtime);
-	timeinfo = localtime (&rawtime);
-	return asctime (timeinfo);
-}
 
 #endif /* !_MAIN_H_RPCGEN */
