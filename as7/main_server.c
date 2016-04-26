@@ -98,6 +98,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     	if (is_in_id_list(client_msgs[i].id) == 1 && client_msgs[i].id != client_id){
             remove_from_msg_list(i);
             result = 0;
+            printf("in is in id list block...\n");
             // break from loop, we have a winner
             break;
     	}
