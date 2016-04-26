@@ -15,8 +15,7 @@ char curr_time[26];
 // allocate space for each of 3 clients to put 5 messages on the server
 struct client_data client_msgs[MSG_LIMIT];
 
-// store the client ids in the same order as client msgs
-int client_ids[MSG_LIMIT] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+int client_msg_ids[15] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 // store the current client msg index, which should be at max equal to MSG_LIMIT
 int curr_index = 0;
@@ -24,10 +23,10 @@ int curr_index = 0;
 // store the current client index to maintain a new client addition to client list
 int curr_client = 0;
 
-int client_id_list[3][MSG_LIMIT];
+// track msg indices for each client
+int curr_client_indices[3] = {0, 0, 0};
 
 int client_list[3];
-
 
 // sets the current time and date to the "curr_time" char buffer
 void set_time() {
@@ -99,15 +98,17 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 
     // see if the client has any messages to "get"
     for (i = 0; i < MSG_LIMIT; i++){
-        // check if the client id is in the list of ids and not equal to this id
-        if (client_id >= 0 && client_id_list[client_id][i] != client_id && client_id_list[client_id][i] != -1){
-	        // set success status
-            result = 0;
-		    // remove this message from list for this client
-		    client_id_list[client_id][i] = -1;
-		    // found a message, now return
-		    break;
-		}
+    	if (client_id >= 0 && client_id <= 2 && i > curr_client_indices[client_id]){
+            // check if the client id is in the list of ids and not equal to this id
+			if (client_msg_ids[i] != client_id && client_msg_ids[i] != -1){
+				// set success status
+				result = 0;
+				// update the current client message index
+				curr_client_indices[client_id] = i;
+				// found a message, now return
+				break;
+			}
+    	}
     }
 	return &result;
 }
@@ -140,18 +141,11 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 		client_msgs[curr_index].id = argp->id;
 
 		// store id in ordered id list
-		client_ids[curr_index] = argp->id;
+		client_msg_ids[curr_index] = argp->id;
 
 		// store client msg
 	    strcpy(client_msgs[curr_index].message, argp->message);
-	    int j;
 
-	    // update the available messages for each user
-	    for (i = curr_index; i < MSG_LIMIT; i++) {
-	        for (j = 0; j < curr_client; i++) {
-	            client_id_list[j][i] = client_ids[i];
-	        }
-	    }
 	    // add user to client list only if necessary
 	    if (client_id == -1){
 			// add this client to the clients list
