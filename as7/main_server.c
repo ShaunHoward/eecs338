@@ -16,7 +16,7 @@ char curr_time[26];
 struct client_data client_msgs[MSG_LIMIT];
 
 // store the client ids in the same order as client msgs
-int client_ids[MSG_LIMIT];
+int client_ids[MSG_LIMIT] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 // store the current client msg index, which should be at max equal to MSG_LIMIT
 int curr_index = 0;
@@ -87,6 +87,8 @@ get_1_svc(int *argp, struct svc_req *rqstp)
         // check if the client id is in the list of ids and not equal to this id
 		if (client_ids[i] != client_id && client_ids[i] != -1){
 			result += 1;
+			// remove this message from list for this client
+			client_ids[i] = -1;
 		}
     }
 
