@@ -39,6 +39,10 @@ void set_time() {
 		curr_time[0] = 0;
 		return;
 	}
+	int new_line = strlen(curr_time) - 1;
+	if (curr_time[new_line] == '\n') {
+		curr_time[new_line] = '\0';
+	}
 }
 
 void print_status(int status) {
