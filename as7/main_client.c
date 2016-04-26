@@ -79,6 +79,8 @@ char *get_random_string(){
 
     while (fgets(random_str, sizeof(random_str), fp) != NULL) {
 	    // get all characters for string
+    	printf("random string: %s", random_str);
+    	fflush(stdout);
     }
 
     printf("got random string: %s\n", random_str);
@@ -116,8 +118,7 @@ display_prg_1(char *host)
         put_1_arg.id = host_id;
 
 		// generate and set random string for message
-        char *random_str;
-        random_str = get_random_string();
+        char *random_str = get_random_string();
         strcpy(put_1_arg.message, random_str);
         // free the string pointer
         free(random_str);
