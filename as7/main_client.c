@@ -159,6 +159,14 @@ display_prg_1(char *host)
 	// sleep 4 more seconds (already slept 1 second from last iteration of loop)
     sleep(4);
 
+#ifndef	DEBUG
+	clnt = clnt_create (host, DISPLAY_PRG, DISPLAY_VER, "tcp");
+	if (clnt == NULL) {
+		clnt_pcreateerror (host);
+		exit (1);
+	}
+#endif	/* DEBUG */
+
     // client calls get from server 2*NUM_PUTS times
     for (i = 0; i < 2*NUM_PUTS; i++) {
     	set_time();
