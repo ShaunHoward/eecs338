@@ -59,12 +59,13 @@ void print_status(int status) {
 char *get_random_string(){
     // uses the fortune program to generate a random string
     FILE *fp;
-    char* random_str;
-    random_str = (char*)malloc(100);
-    if (random_str == NULL) {
-    	perror("random string memory allocation failed...");
-        return "";
-    }
+
+    // variables for creating random string
+    char *random_str = NULL;
+    char *temp = NULL;
+    char buf[100];
+    unsigned int size = 1;
+    unsigned int str_length;
 
     fp = popen("fortune", "r");
     if (fp == NULL) {
@@ -77,8 +78,19 @@ char *get_random_string(){
 	    return "error generating random string...";
     }
 
-    while (fgets(random_str, sizeof(random_str), fp) != NULL) {
-	    // get all characters for string
+    while (fgets(buf, sizeof(buf), fp) != NULL) {
+    	str_length = strlen(buf);
+        temp = realloc(random_str, size + str_length);
+    	if (temp == NULL) {
+        	perror("temporary random string memory allocation failed...");
+            return "";
+        } else {
+        	random_str = temp;
+        }
+        strcpy(random_str + size - 1, buf);
+        size += str_length;
+
+    	// get all characters for string
     	printf("random string: %s", random_str);
     	fflush(stdout);
     }
