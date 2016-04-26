@@ -53,7 +53,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 	// initially, store error result
 	static int  result = -1;
     set_time();
-	printf("[%s] Client %d sent a GET Request", curr_time, *argp);
+	printf("[%s] Server received a GET request from client %d.\n", curr_time, *argp);
     fflush(stdout);
 
 	//check if there are any messages received from clients other than the one specified
@@ -76,7 +76,7 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
 	static int  result = -1;
 	set_time();
-	printf("[%s] Client %d sent a PUT Request", curr_time, argp->id);
+	printf("[%s] Server received a PUT request from client %d.\n", curr_time, argp->id);
     fflush(stdout);
 
 	if (curr_index < MSG_LIMIT){
