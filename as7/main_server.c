@@ -60,6 +60,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     int i;
     for (i = 0; i < sizeof(client_msgs); i++){
     	if (client_msgs[i].id != *argp){
+    		printf("checked here once");
     		result += 1;
     	}
     }
