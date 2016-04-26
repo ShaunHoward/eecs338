@@ -24,7 +24,7 @@ int curr_index = 0;
 int curr_client = 0;
 
 // track msg indices for each client
-int curr_client_indices[3] = {0, 0, 0};
+int curr_client_indices[3] = {-1, -1, -1};
 
 int client_list[3];
 
@@ -110,6 +110,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 			}
     	}
     }
+    printf("value of result: %d\n", result);
 	return &result;
 }
 
@@ -142,6 +143,11 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 
 		// store id in ordered id list
 		client_msg_ids[curr_index] = argp->id;
+
+		for(i = 0; i < MSG_LIMIT; i++) {
+		    printf("%d, ", client_msg_ids[i]);
+		}
+		printf("\n");
 
 		// store client msg
 	    strcpy(client_msgs[curr_index].message, argp->message);
