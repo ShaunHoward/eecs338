@@ -6,8 +6,20 @@
 
 #include "main.h"
 
+// track whether the client data has been initialized
+int is_initialized = 0;
+
 // allocate space for each of 3 clients to put 5 messages on the server
 struct client_data client_msgs[MSG_LIMIT];
+int i = 0;
+
+void init_client_data(){
+	for (i=0; i< sizeof(client_msgs); i++) {
+		client_msgs[i].id = -1;
+	    strcpy(client_msgs[i].message, "initialized");
+	}
+}
+
 
 // store the current client msg index, which should be at max equal to MSG_LIMIT
 int curr_index = 0;
@@ -50,6 +62,11 @@ void set_time() {
 int *
 get_1_svc(int *argp, struct svc_req *rqstp)
 {
+	// initialize client data if not already done
+	if (is_initialized == 0) {
+		is_initialized += 1;
+		init_client_data();
+	}
 	// initially, store error result
 	static int  result = -1;
     set_time();
@@ -75,6 +92,12 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 int *
 put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
+	// initialize client data if not already done
+	if (is_initialized == 0) {
+		is_initialized += 1;
+		init_client_data();
+	}
+
 	static int  result = -1;
 	set_time();
 	printf("[%s] Server received a PUT request from client %d.\n", curr_time, argp->id);
