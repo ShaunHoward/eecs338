@@ -158,16 +158,13 @@ display_prg_1(char *host)
 	for (i = 0; i < NUM_PUTS; i++) {
 	    // set host id in message
         put_1_arg.id = host_id;
-        printf("encoded int.. now for string...\n");
 		// generate and set random string for message
         char *random_str = get_random_string();
         strcpy(put_1_arg.message, random_str);
-        printf("encoded string...\n");
         // free the string pointer
         free(random_str);
 
         set_time();
-        printf("got time...\n");
 
         // print put request message
 	    printf ("[%s] Client %d sent a PUT request.\n", curr_time, host_id);
