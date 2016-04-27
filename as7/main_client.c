@@ -139,7 +139,7 @@ display_prg_1(char *host)
 	// seed random with null
 	srand(time(NULL));
 	// get random number between 0 and 100
-	int host_id = 0;//(int)(rand() % (100 + 1 - 0) + 0);
+	int host_id = (int)(rand() % (100 + 1 - 0) + 0);
 	int  *result_1;
 	int  get_1_arg;
 	int  *result_2;
