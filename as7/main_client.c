@@ -5,13 +5,11 @@
  * NOTE: The shell running this program must have fortune installed.
  */
 
-
 #include "main.h"
 #include <time.h>
 #include <unistd.h>
 #define NUM_PUTS 5
 #define MSG_LIMIT 15
-
 
 // store the current time in a global array of 26 chars
 char curr_time[26];
@@ -62,7 +60,7 @@ void print_status(int status) {
 	set_time();
     // print success or error message
     if (status == 0) {
-        printf ("[%s] Success response from server.\n status: %d\n", curr_time, status);
+        printf ("[%s] Success response from server.\n", curr_time);
     } else {
         printf("[%s] Failure response from server.\n", curr_time);
     }
@@ -113,16 +111,12 @@ char *get_random_string(){
         	random_str = temp;
         }
     	// copy the buffer to the random string
-        strcpy(random_str + size - 1, buf);
+        if (strcpy(random_str + size - 1, buf) == NULL){
+        	perror("error copying random string...");
+        }
         // increase the size variable by the added string length
         size += str_length;
-
-    	// get all characters for string
-    	printf("random string: %s", random_str);
-    	fflush(stdout);
     }
-
-    printf("got random string: %s\n", random_str);
 
     // error-check closing fortune process
 	if (pclose(fp) == -1){
@@ -160,10 +154,12 @@ display_prg_1(char *host)
         put_1_arg.id = host_id;
 		// generate and set random string for message
         char *random_str = get_random_string();
-        strcpy(put_1_arg.message, random_str);
+        if (strcpy(put_1_arg.message, random_str) == NULL){
+        	perror("error copying put message...");
+        }
         // free the string pointer
         free(random_str);
-
+        // set global time
         set_time();
 
         // print put request message
@@ -192,6 +188,7 @@ display_prg_1(char *host)
     for (i = 0; i < 2*NUM_PUTS; i++) {
     	// set host id in message
         get_1_arg = host_id;
+        // set curr time
     	set_time();
     	// print get request message
     	printf("[%s] Client %d sent a GET request.\n", curr_time, host_id);

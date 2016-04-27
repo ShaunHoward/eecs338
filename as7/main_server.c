@@ -7,6 +7,7 @@
 #include "main.h"
 #include <time.h>
 
+// set message limit for server
 #define MSG_LIMIT 15
 
 // track whether the client data has been initialized
@@ -18,6 +19,7 @@ char curr_time[26];
 // allocate space for each of 3 clients to put 5 messages on the server
 struct client_data client_msgs[MSG_LIMIT];
 
+// initialize all client msg ids to -1, incrementally change based on messages put in fcfs order
 int client_msg_ids[15] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 // store the current client msg index, which should be at max equal to MSG_LIMIT
@@ -29,6 +31,7 @@ int curr_client = 0;
 // track msg indices for each client
 int curr_client_indices[3] = {-1, -1, -1};
 
+// store the current client ids in a list, only support 3 clients
 int client_list[3];
 
 // sets the current time and date to the "curr_time" char buffer
@@ -77,6 +80,11 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 {
 	// initially, store error result
 	int *result = (int *)malloc(sizeof(int));
+	if (result == NULL) {
+		perror("result malloc failed...");
+		int n;
+		result = &n;
+	}
     *result = -1;
 	// set the most updated time for the global time array
     set_time();
@@ -121,17 +129,24 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 int *
 put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
+	// initialize result in memory to error status
 	int *result = (int *)malloc(sizeof(int));
+	if (result == NULL) {
+		perror("result malloc failed...");
+		int n;
+		result = &n;
+	}
 	*result = -1;
 	// set the most updated time for the global time array
 	set_time();
 	printf("[%s] Server received a PUT request from client %d.\n", curr_time, argp->id);
     fflush(stdout);
 
+    // only put new message if the message limit has not been met
 	if (curr_index < MSG_LIMIT){
 	    // should be between 0 and 2, else client not in list
 	    int client_id = -1;
-	    int i = 0;
+	    int i;
 	    // get client id
 	    for (i = 0; i < 3; i++) {
 	    	// check to see where the client is in the server client list
@@ -143,31 +158,28 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 	    	}
 	    }
 
-	    // store client id
-		client_msgs[curr_index].id = argp->id;
-
-		// store id in ordered id list
-		client_msg_ids[curr_index] = argp->id;
-
-		for(i = 0; i < MSG_LIMIT; i++) {
-		    printf("%d, ", client_msg_ids[i]);
-		}
-		printf("\n");
-
 		// store client msg
-	    strcpy(client_msgs[curr_index].message, argp->message);
+	    if (strcpy(client_msgs[curr_index].message, argp->message) == NULL){
+	    	perror("failure putting message on server...");
+	    } else {
+		    // store client id
+			client_msgs[curr_index].id = argp->id;
 
-	    // add user to client list only if necessary
-	    if (client_id == -1){
-			// add this client to the clients list
-			client_list[curr_client] = argp->id;
-			// increment curr client counter
-			curr_client += 1;
+			// store id in ordered id list
+			client_msg_ids[curr_index] = argp->id;
+
+			// add user to client list only if necessary
+			if (client_id == -1){
+				// add this client to the clients list
+				client_list[curr_client] = argp->id;
+				// increment curr client counter
+				curr_client += 1;
+			}
+			// increment current client msg index
+			curr_index += 1;
+			// set success result
+			*result = 0;
 	    }
-	    // increment current client msg index
-	    curr_index += 1;
-	    // set result to 0
-	    *result = 0;
 	}
 	return result;
 }
