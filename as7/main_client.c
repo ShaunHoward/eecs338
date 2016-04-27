@@ -146,7 +146,7 @@ display_prg_1(char *host)
 	struct client_data  put_1_arg;
 
 #ifndef	DEBUG
-	clnt = clnt_create (host, DISPLAY_PRG, DISPLAY_VER, "tcp");
+	clnt = clnt_create (host, DISPLAY_PRG, DISPLAY_VER, "udp");
 	if (clnt == NULL) {
 		clnt_pcreateerror (host);
 		exit (1);

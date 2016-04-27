@@ -110,16 +110,11 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 				*result = 0;
 				// update the current client message index
 				curr_client_indices[client_id] = i;
-				printf("exiting get loop at iteration %d\n", i);
-				fflush(stdout);
-				printf("message: %s\n", client_msgs[i].message);
-				fflush(stdout);
 				// found a message, now return
 				return result;
 			}
     	}
     }
-    printf("result should not be 0, but is: %d\n", *result);
 	return result;
 }
 
