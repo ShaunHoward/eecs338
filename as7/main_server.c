@@ -118,6 +118,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 			}
     	}
     }
+    printf("result should not be 0, but is: %d\n", result);
 	return &result;
 }
 
