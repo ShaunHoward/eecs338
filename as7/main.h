@@ -21,7 +21,7 @@ extern "C" {
 // client data contains the client id and a message to store
 struct client_data {
 	int id;
-	char message[8000];
+	char message[7500];
 };
 
 typedef struct client_data client_data;
