@@ -7,6 +7,7 @@
 
 
 #include "main.h"
+#include <time.h>
 #include <unistd.h>
 #define NUM_PUTS 5
 #define MSG_LIMIT 15

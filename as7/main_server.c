@@ -5,6 +5,8 @@
  */
 
 #include "main.h"
+#include <time.h>
+
 #define MSG_LIMIT 15
 
 // track whether the client data has been initialized
