@@ -101,6 +101,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 
     // see if the client has any messages to "get"
     for (i = 0; i < MSG_LIMIT; i++){
+    	// limit to only 3 clients
     	if (client_id >= 0 && client_id <= 2 && i > curr_client_indices[client_id]){
             // check if the client id is in the list of ids and not equal to this id
 			if (client_msg_ids[i] != real_client_id && client_msg_ids[i] >= 0){
@@ -108,6 +109,9 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 				result = 0;
 				// update the current client message index
 				curr_client_indices[client_id] = i;
+				printf("exiting get loop at iteriaton %d\n", i);
+				printf("message: %s\n", client_msgs[i].message);
+				fflush(stdout);
 				// found a message, now return
 				break;
 			}
