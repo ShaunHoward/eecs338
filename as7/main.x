@@ -1,6 +1,6 @@
 struct client_data {
     int id;
-    char message[8000];
+    char message[2000];
 };
 
 program DISPLAY_PRG {

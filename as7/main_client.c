@@ -9,6 +9,8 @@
 #include "main.h"
 #include <unistd.h>
 #define NUM_PUTS 5
+#define MSG_LIMIT 15
+
 
 // store the current time in a global array of 26 chars
 char curr_time[26];

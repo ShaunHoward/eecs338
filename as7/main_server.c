@@ -5,6 +5,7 @@
  */
 
 #include "main.h"
+#define MSG_LIMIT 15
 
 // track whether the client data has been initialized
 int is_initialized = 0;
@@ -80,7 +81,7 @@ get_1_svc(int *argp, struct svc_req *rqstp)
     fflush(stdout);
 
 	//check if there are any messages received from clients other than the one specified
-    int i, j;
+    int i;
     
     // should be between 0 and 2 if in id list, else cannot see any messages
     int client_id = -1;
