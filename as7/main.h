@@ -7,7 +7,6 @@
 #define _MAIN_H_RPCGEN
 
 #include <rpc/rpc.h>
-#include <time.h>
 
 
 #ifdef __cplusplus
