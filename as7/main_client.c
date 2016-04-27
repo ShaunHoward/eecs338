@@ -133,12 +133,10 @@ void
 display_prg_1(char *host)
 {
 	CLIENT *clnt;
-	// get the host id integer
-	int min = 0;
-	int max = 10000;
 	// seed random with null
 	srand(time(NULL));
-	int host_id = rand() * 23;
+	// get random number between 0 and 100
+	int host_id = (int)(rand() % (100 + 1 - 0) + 0);
 	int  *result_1;
 	int  get_1_arg;
 	int  *result_2;
