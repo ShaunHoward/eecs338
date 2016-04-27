@@ -76,7 +76,7 @@ int *
 get_1_svc(int *argp, struct svc_req *rqstp)
 {
 	// initially, store error result
-	static int  result = -1;
+	static int  result;
 	// set the most updated time for the global time array
     set_time();
 	printf("[%s] Server received a GET request from client %d.\n", curr_time, *argp);
@@ -116,6 +116,9 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 				break;
 			}
     	}
+    }
+    if (result != 0) {
+    	result = -1;
     }
 	return &result;
 }
