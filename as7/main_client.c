@@ -62,7 +62,7 @@ void print_status(int status) {
 	set_time();
     // print success or error message
     if (status == 0) {
-        printf ("[%s] Success response from server.\n", curr_time);
+        printf ("[%s] Success response from server.\n status: %d\n", curr_time, status);
     } else {
         printf("[%s] Failure response from server.\n", curr_time);
     }
