@@ -76,7 +76,7 @@ int *
 get_1_svc(int *argp, struct svc_req *rqstp)
 {
 	// initially, store error result
-	static int  result;
+	static int result = -1;
 	// set the most updated time for the global time array
     set_time();
 	printf("[%s] Server received a GET request from client %d.\n", curr_time, *argp);
@@ -110,15 +110,13 @@ get_1_svc(int *argp, struct svc_req *rqstp)
 				// update the current client message index
 				curr_client_indices[client_id] = i;
 				printf("exiting get loop at iteriaton %d\n", i);
+				fflush(stdout);
 				printf("message: %s\n", client_msgs[i].message);
 				fflush(stdout);
 				// found a message, now return
-				break;
+				return &result;
 			}
     	}
-    }
-    if (result != 0) {
-    	result = -1;
     }
 	return &result;
 }
