@@ -76,7 +76,8 @@ int *
 get_1_svc(int *argp, struct svc_req *rqstp)
 {
 	// initially, store error result
-	static int result = -1;
+	int *result = (int *)malloc(sizeof(int));
+    *result = -1;
 	// set the most updated time for the global time array
     set_time();
 	printf("[%s] Server received a GET request from client %d.\n", curr_time, *argp);
@@ -106,26 +107,27 @@ get_1_svc(int *argp, struct svc_req *rqstp)
             // check if the client id is in the list of ids and not equal to this id
 			if (client_msg_ids[i] != real_client_id && client_msg_ids[i] >= 0){
 				// set success status
-				result = 0;
+				*result = 0;
 				// update the current client message index
 				curr_client_indices[client_id] = i;
-				printf("exiting get loop at iteriaton %d\n", i);
+				printf("exiting get loop at iteration %d\n", i);
 				fflush(stdout);
 				printf("message: %s\n", client_msgs[i].message);
 				fflush(stdout);
 				// found a message, now return
-				return &result;
+				return result;
 			}
     	}
     }
-    printf("result should not be 0, but is: %d\n", result);
-	return &result;
+    printf("result should not be 0, but is: %d\n", *result);
+	return result;
 }
 
 int *
 put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 {
-	static int  result = -1;
+	int *result = (int *)malloc(sizeof(int));
+	*result = -1;
 	// set the most updated time for the global time array
 	set_time();
 	printf("[%s] Server received a PUT request from client %d.\n", curr_time, argp->id);
@@ -170,7 +172,7 @@ put_1_svc(struct client_data *argp, struct svc_req *rqstp)
 	    // increment current client msg index
 	    curr_index += 1;
 	    // set result to 0
-	    result = 0;
+	    *result = 0;
 	}
-	return &result;
+	return result;
 }
